@@ -25,12 +25,12 @@
 2. **Микроядро (`src/kernel/index.ts`)**:
    - Реализовать схему `pluginManifestSchema` на базе Zod (валидация `id`, `name`, `version`, `init`).
    - Типизировать контракты компонентов (`NodeComponentProps`, `NodeTypeRegistration`, `EdgeComponentProps`).
-   - Типизировать `EditorStateSnapshot` и фасад разделяемого состояния `getEditorState()` в `PluginContext` (выделенные узлы, нажатые клавиши, модификаторы, viewport, режим).
+   - Типизировать снимок контекста окружения `EnvironmentStateSnapshot` и фасад доступа к состоянию `getState()` в `PluginContext` (актуальные сущности, режимы, параметры, селекшн, метаданные и ввод).
    - Реализовать `PluginRegistry` с поддержкой:
      - ACL-валидации манифеста через `pluginManifestSchema.safeParse()`.
      - Сохранения disposer-колбэков от `init()` и их гарантированного вызова при `unregister()`.
      - Реестра типов узлов и ребер.
-     - Интеграции с поставщиком общего состояния редактора (`stateProvider`).
+     - Интеграции с поставщиком общего состояния среды (`stateProvider`).
    - Реализовать фабрику `definePlugin()`.
 3. **Слой плагинов (`src/plugins/`)**:
    - Создать директорию эталонного плагина `src/plugins/default-nodes/` (или аналогичного).
