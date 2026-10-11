@@ -577,6 +577,22 @@ document.getElementById("pushPatchBtn").addEventListener("click", async () => {
   }
 });
 
+async function checkStatus() {
+  try {
+    const res = await fetch("/api/status", { cache: "no-store" });
+    if (res.ok) {
+      const status = await res.json();
+      const banner = document.getElementById("envWarningBanner");
+      if (banner) {
+        banner.style.display = status.envExists ? "none" : "flex";
+      }
+    }
+  } catch (e) {
+    console.warn("Could not check server status:", e);
+  }
+}
+
+checkStatus();
 loadTree();
 
 window.addEventListener("hashchange", () => {

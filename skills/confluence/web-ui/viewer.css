@@ -407,3 +407,39 @@ body.dark-mode .html-view del.diff-del,
 body.dark-mode .html-view del {
   background-color: rgba(248, 81, 73, 0.4);
 }
+
+.env-warning-banner {
+  background-color: #fff8e6;
+  border-left: 4px solid #ffab00;
+  color: #172b4d;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255, 171, 0, 0.3);
+}
+
+body.dark-mode .env-warning-banner {
+  background-color: #332b00;
+  border-left: 4px solid #f5cd47;
+  color: #e6c60d;
+  border-bottom: 1px solid rgba(245, 205, 71, 0.2);
+}
+
+.env-warning-banner .warning-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.env-warning-banner .warning-content code {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+body.dark-mode .env-warning-banner .warning-content code {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}

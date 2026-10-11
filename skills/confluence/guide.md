@@ -29,6 +29,7 @@
 
 ## Module Capabilities & Contracts (`module_capabilities_and_contracts`)
 - **API & Contracts**:
+  - `GET /api/status`: Returns configuration status (`{ envExists, confluenceUrl, port }`). Header: `Cache-Control: no-store`.
   - `GET /api/tree`: Returns `confluence_index.json` as JSON. Header: `Cache-Control: no-store`.
   - `GET /api/page?id={id}`: Returns page state with applied local patches and remote URL metadata.
   - `GET /api/history?id={id}`: Returns unified timeline of `server` and `local` patches.
