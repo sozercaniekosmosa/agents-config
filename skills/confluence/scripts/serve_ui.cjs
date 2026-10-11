@@ -6,6 +6,18 @@ const storage = require('./storage.cjs');
 
 const PORT = 8080;
 const UI_PATH = path.resolve(__dirname, '../web-ui/viewer.html');
+const ENV_PATH = path.resolve(__dirname, '../.env');
+
+const hasEnv = fs.existsSync(ENV_PATH);
+if (hasEnv) {
+  if (typeof process.loadEnvFile === 'function') {
+    process.loadEnvFile(ENV_PATH);
+  }
+} else {
+  console.warn('\x1b[33m%s\x1b[0m', '⚠️  [ВНИМАНИЕ] Файл .env не найден!');
+  console.warn('   Для интеграции с Confluence скопируйте _.env в .env и настройте параметры.');
+  console.warn('   Локальный интерфейс запущен в автономном режиме чтения.\n');
+}
 
 const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -51,6 +63,20 @@ const server = http.createServer((req, res) => {
         res.writeHead(500);
         res.end(JSON.stringify({ error: e.message }));
       }
+      return;
+    }
+
+    if (pathname === '/api/status') {
+      const envExists = fs.existsSync(ENV_PATH);
+      res.writeHead(200, { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      });
+      res.end(JSON.stringify({ 
+        envExists,
+        confluenceUrl: process.env.CONFLUENCE_URL || '',
+        port: PORT
+      }));
       return;
     }
 
@@ -178,6 +204,14 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'POST') {
     if (pathname === '/api/sync_server') {
+      if (!fs.existsSync(ENV_PATH)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          success: false, 
+          error: 'Файл .env не найден. Скопируйте _.env в .env и укажите параметры подключения.' 
+        }));
+        return;
+      }
       try {
         const { execSync } = require('child_process');
         execSync('node --env-file=.env scripts/sync_all.cjs', { stdio: 'inherit' });
@@ -208,6 +242,13 @@ const server = http.createServer((req, res) => {
     }
 
     if (pathname === '/api/patch/push') {
+      if (!fs.existsSync(ENV_PATH)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+          error: 'Файл .env не найден. Скопируйте _.env в .env и укажите параметры подключения.' 
+        }));
+        return;
+      }
       let body = '';
       req.on('data', chunk => { body += chunk.toString(); });
       req.on('end', () => {
@@ -234,4 +275,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Confluence Local UI Server running at http://localhost:${PORT}`);
+  if (!fs.existsSync(ENV_PATH)) {
+    console.warn(`[ПРЕДУПРЕЖДЕНИЕ] http://localhost:${PORT} запущен в автономном режиме. Файл .env не найден.`);
+  }
 });

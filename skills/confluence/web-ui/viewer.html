@@ -38,6 +38,12 @@
     </div>
     <div class="resizer" id="dragResizer"></div>
     <div class="content">
+      <div id="envWarningBanner" class="env-warning-banner" style="display: none;">
+        <span class="warning-icon">⚠️</span>
+        <div class="warning-content">
+          <strong>Файл .env не найден!</strong> Синхронизация и отправка на сервер недоступны. Скопируйте <code>_.env</code> в <code>.env</code> и укажите параметры подключения к Confluence.
+        </div>
+      </div>
       <div class="content-header">
         <div style="display: flex; justify-content: space-between; align-items: flex-start">
           <h2 id="pageTitle" style="margin-bottom: 4px">Выберите документ</h2>

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")"
 echo "Starting Local Confluence UI..."
-node --env-file=.env scripts/serve_ui.cjs &
+node scripts/serve_ui.cjs &
 SERVER_PID=$!
 sleep 1
 if command -v xdg-open > /dev/null; then
