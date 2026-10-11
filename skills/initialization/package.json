@@ -4,7 +4,6 @@
   "private": true,
   "description": "Agent config sync & project init skill",
   "scripts": {
-    "pull": "node scripts/sync.cjs pull",
     "push": "node scripts/sync.cjs push"
   }
 }
