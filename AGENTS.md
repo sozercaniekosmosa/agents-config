@@ -16,7 +16,7 @@
 
 ## 🛡️ Anti-Corruption Layer (ACL) & Validation
 
-1. **Boundary Validation**: External data (API, WebSockets, Storage, inputs) → mandatory runtime schema validation (Zod/Valibot/схемы).
+1. **Boundary Validation**: External data (API, WebSockets, Storage, inputs) → mandatory runtime schema validation (Zod/Valibot/schemas).
 2. **Anti-Corruption Layer (ACL)**: External DTOs/raw structures → map to domain entities via mappers/adapters before entering State/UI. Raw DTO in UI prohibited.
 3. **Fallbacks & Resilience**: Malformed external data → safe defaults/fallbacks, crash prevention.
 
@@ -50,6 +50,7 @@
 - **Code Quality**: Strictly Best Practice. Prohibit temporary hacks/legacy patterns.
 - **Contract Approval**: Contract changes & code alignment → strictly after user confirmation.
 - **Question Handling**: Explicit/implicit questions → prohibit code edits → answer in chat first.
+- **🚨 AGENTS.md Protection (CRITICAL)**: Modification of `.agents/AGENTS.md` → strictly prohibited without explicit user permission. Permission trigger: explicit instruction "внеси изменения в файл .agents/AGENTS.md" or "modify the file .agents/AGENTS.md". All rules, standards & architectural decisions → record strictly in `docs/` (`docs/project-rules.md`, `docs/architecture.md`).
 - **🚨 Concise Communication Style (STRICT STANDARD WITH NO EXCEPTIONS)**:
   - **PROHIBITED**: Greetings, politeness, intro phrases, repeating task specs/files, verbose explanations.
   - **MANDATORY**:
