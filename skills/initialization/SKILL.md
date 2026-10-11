@@ -57,6 +57,12 @@ description: >
 > 3. Обязан аргументировать выбор перед пользователем: обосновать выбранный паттерн и объяснить, почему отброшены альтернативы.
 > 4. Строго соблюдать последовательность: Сначала определение архитектуры и слоев (`architecture.md`), затем фиксация технических стандартов под эти слои (`project-rules.md`).
 
+> [!IMPORTANT]
+> **Тотальная борьба с Coupling и максимизация Cohesion**:
+> Агент обязан внедрять в `architecture.md` и `project-rules.md` бескомпромиссные правила:
+> 1. **Low Coupling**: Закон Деметры, инверсия зависимостей (DIP), 0 cross-imports между соседними модулями/плагинами, запрет глубоких импортов в обход `index.ts`, изоляция платформенного окружения.
+> 2. **High Cohesion**: Single Responsibility Principle (SRP), функциональная связность (полная инкапсуляция схем, UI и логики модуля в своей папке), запрет God Objects и монолитных утилит/сторов.
+
 ---
 
 ## 📋 Порядок Выполнения Инициализации Rules
@@ -76,10 +82,12 @@ description: >
 2. **Архитектура (`architecture.md`)**:
    - Подобрать архетип по `references/architecture_matrix.md` с аргументацией и отброшенными альтернативами.
    - Определить состав слоев, правила DAG и публичный контракт (`src/index.ts`).
+   - Зафиксировать принципы Low Coupling (DIP, Закон Деметры, запрет cross-imports и deep imports).
    - Определить границы ACL и точки валидации (включая манифесты плагинов / внешние DTO).
    - Согласовать архитектурный план с пользователем через `ask_question` / чат.
 3. **Технические стандарты (`project-rules.md`)**:
    - Сформулировать правила изоляции слоев под выбранную архитектуру.
+   - Зафиксировать стандарты Low Coupling & High Cohesion (SRP, функциональная связность, запрет God Objects / монолитных утилит).
    - Зафиксировать стек runtime-валидации (Zod / Valibot), правила мапперов ACL и fallbacks.
    - Зафиксировать политику техдолга (`docs/techdebt.md`, запрет `// TODO` в коде) и доменные Best Practices стека.
 
@@ -90,8 +98,8 @@ description: >
 После согласования всех ответов подставить значения в референсные шаблоны:
 
 - `references/context_template.md` → `docs/context.md`
-- `references/architecture_template.md` → `docs/architecture.md` (паттерн, слои, DAG, публичные контракты, границы ACL)
-- `references/project_rules_template.md` → `docs/project-rules.md` (правила слоев, стек валидации, правила ACL, лучшие практики стека)
+- `references/architecture_template.md` → `docs/architecture.md` (паттерн, слои, DAG, публичные контракты, принципы Low Coupling/High Cohesion, границы ACL)
+- `references/project_rules_template.md` → `docs/project-rules.md` (правила слоев, стандарты Low Coupling/High Cohesion, стек валидации, правила ACL, лучшие практики стека)
 - Инициализировать `docs/techdebt.md` (если еще не создан).
 
 ---
