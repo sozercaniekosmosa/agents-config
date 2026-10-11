@@ -66,15 +66,15 @@ function resolveImportToFile(resolvedPath) {
   if (fs.existsSync(resolvedPath)) {
     try {
       const stat = fs.statSync(resolvedPath);
-      if (stat.isFile()) return resolvedPath;
+      if (stat.isFile()) return path.resolve(resolvedPath);
     } catch (_) {}
   }
   for (const ext of extensions) {
-    const p = resolvedPath + ext;
+    const p = ext.startsWith('/') ? path.join(resolvedPath, ext) : resolvedPath + ext;
     if (fs.existsSync(p)) {
       try {
         const stat = fs.statSync(p);
-        if (stat.isFile()) return p;
+        if (stat.isFile()) return path.resolve(p);
       } catch (_) {}
     }
   }
@@ -117,32 +117,61 @@ function findModules(dir, depth = 0) {
 
 findModules(srcDir);
 
-// 3. Scan all source files & imports
-const offendingImports = [];
-const layerViolations = [];
-const allSourceFiles = new Set();
-const usedFiles = new Set();
+// 3. Parse DAG hierarchy dynamically from docs/architecture.md
+const DEFAULT_DAG = [
+  'shared',
+  'core',
+  'schema',
+  'model',
+  'kernel',
+  'plugins',
+  'store',
+  'canvas',
+  'components',
+  'demo',
+];
 
-// Parse layer order from docs/architecture.md if present (e.g. DAG)
 function getLayerHierarchy() {
   const archFile = path.join(workspaceRoot, 'docs/architecture.md');
-  if (!fs.existsSync(archFile)) return null;
+  if (!fs.existsSync(archFile)) return DEFAULT_DAG;
 
-  const content = fs.readFileSync(archFile, 'utf8');
-  // Match lines like: 1. `src/core/` or `core` -> ...
-  const lines = content.split('\n');
-  const layers = [];
+  try {
+    const content = fs.readFileSync(archFile, 'utf8');
 
-  for (const line of lines) {
-    const match = line.match(/^\s*\d+\.\s+\*\*`?(?:src\/)?([a-zA-Z0-9_-]+)\/?`?\*\*/);
-    if (match && match[1]) {
-      layers.push(match[1]);
+    // 1. Check explicit DAG chain: `demo` → `components` → ... → `shared`
+    const dagMatch = content.match(/Однонаправленный поток[^:]*:\s*\n?\s*([^\n]+)/i);
+    if (dagMatch) {
+      const rawChain = dagMatch[1];
+      const parts = rawChain
+        .split(/→|->/)
+        .map(s => s.replace(/[`*_\s]/g, '').trim())
+        .filter(Boolean);
+      if (parts.length >= 5) {
+        // Reversed so base/shared has index 0, top (demo) has highest index
+        return parts.reverse();
+      }
     }
-  }
-  return layers.length > 0 ? layers : null;
+
+    // 2. Fallback: Parse numbered list: 1. `core/`: ...
+    const lines = content.split('\n');
+    const layers = [];
+    for (const line of lines) {
+      const match = line.match(/^\s*\d+\.\s+[*`]*(?:src\/)?([a-zA-Z0-9_-]+)\/?[*`]*\s*:/);
+      if (match && match[1]) {
+        layers.push(match[1]);
+      }
+    }
+    if (layers.length >= 5) {
+      // In numbered list: core(1) -> ... -> shared(9) -> demo(10). Ensure shared is at bottom.
+      const withoutShared = layers.filter(l => l !== 'shared');
+      return ['shared', ...withoutShared];
+    }
+  } catch (_) {}
+
+  return DEFAULT_DAG;
 }
 
-const layerOrder = getLayerHierarchy(); // [core, schema, graph, store, canvas, components, shared, demo]
+const layerOrder = getLayerHierarchy();
 
 function getLayerName(filePath) {
   const rel = path.relative(srcDir, filePath);
@@ -151,11 +180,27 @@ function getLayerName(filePath) {
   return parts.length > 1 ? parts[0] : null;
 }
 
+const pluginsDir = path.join(srcDir, 'plugins');
+function getPluginSubdir(filePath) {
+  const rel = path.relative(pluginsDir, filePath);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
+  const parts = rel.split(path.sep);
+  return parts.length > 1 ? parts[0] : null;
+}
+
+// 4. Scan all source files & imports
+const offendingImports = [];
+const layerViolations = [];
+const pluginViolations = [];
+const allSourceFiles = new Set();
+const usedFiles = new Set();
+
 function checkFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf8');
   const importRegex = /from\s+['"]([^'"]+)['"]|import\s+['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)/g;
   let match;
   const currentLayer = getLayerName(filePath);
+  const fromPlugin = getPluginSubdir(filePath);
 
   while ((match = importRegex.exec(content)) !== null) {
     const importPath = match[1] || match[2] || match[3];
@@ -181,14 +226,40 @@ function checkFile(filePath) {
       if (resolvedFile) {
         usedFiles.add(path.resolve(resolvedFile));
 
-        // DAG check: Pure layers (e.g. core, schema) must not import higher layers
-        if (currentLayer && layerOrder) {
-          const importedLayer = getLayerName(resolvedFile);
-          const isUtilityLayer = importedLayer === 'shared' || importedLayer === 'common' || importedLayer === 'utils' || importedLayer === 'lib';
-          if (importedLayer && importedLayer !== currentLayer && !isUtilityLayer) {
+        const importedLayer = getLayerName(resolvedFile);
+        const toPlugin = getPluginSubdir(resolvedFile);
+
+        // A. Plugin Isolation check: Zero Cross-Imports between plugins
+        if (fromPlugin && toPlugin && fromPlugin !== toPlugin) {
+          pluginViolations.push({
+            file: path.relative(workspaceRoot, filePath),
+            fromPlugin,
+            toPlugin,
+            importPath,
+          });
+        }
+
+        // B. Pure computation layers (core, schema, model) must never import UI / React from shared/ui
+        const pureComputationLayers = ['core', 'schema', 'model'];
+        if (currentLayer && pureComputationLayers.includes(currentLayer)) {
+          const relToSrc = path.relative(srcDir, resolvedFile).replace(/\\/g, '/');
+          if (relToSrc.startsWith('shared/ui')) {
+            layerViolations.push({
+              file: path.relative(workspaceRoot, filePath),
+              currentLayer,
+              importedLayer: 'shared/ui',
+              importPath,
+            });
+          }
+        }
+
+        // C. DAG check: Lower layers must not import higher layers
+        if (currentLayer && importedLayer && currentLayer !== importedLayer) {
+          const isBaseUtility = importedLayer === 'shared' && !pureComputationLayers.includes(currentLayer);
+          if (!isBaseUtility) {
             const currentIndex = layerOrder.indexOf(currentLayer);
             const importedIndex = layerOrder.indexOf(importedLayer);
-            // Lower index = deeper/core layer. Core (0) cannot import canvas (4).
+            // Lower index = deeper layer. Lower layer cannot import higher layer.
             if (currentIndex !== -1 && importedIndex !== -1 && currentIndex < importedIndex) {
               layerViolations.push({
                 file: path.relative(workspaceRoot, filePath),
@@ -201,7 +272,7 @@ function checkFile(filePath) {
         }
       }
 
-      // Check cross-module deep imports
+      // D. Check cross-module deep imports
       for (const mod of modules) {
         if (filePath.startsWith(mod + path.sep) || filePath === mod) {
           continue;
@@ -219,7 +290,15 @@ function checkFile(filePath) {
             relativeLower === 'types' ||
             relativeLower === 'types.ts';
 
-          if (!isEntryFile) {
+          // Check if resolved target is itself a submodule's entry point
+          const normResolved = path.resolve(resolvedFile);
+          const isSubmoduleEntry = modules.some(m => {
+            const entryTs = path.resolve(m, 'index.ts');
+            const entryTsx = path.resolve(m, 'index.tsx');
+            return normResolved === entryTs || normResolved === entryTsx;
+          });
+
+          if (!isEntryFile && !isSubmoduleEntry) {
             offendingImports.push({
               file: path.relative(workspaceRoot, filePath),
               importPath,
@@ -262,7 +341,7 @@ function walk(dir) {
 
 walk(srcDir);
 
-// 4. Dead Code Inspection
+// 5. Dead Code Inspection
 const deadFiles = [];
 const standardEntryPoints = [
   path.join(srcDir, 'main.tsx'),
@@ -279,7 +358,7 @@ const standardEntryPoints = [
   path.join(srcDir, 'env.d.ts'),
 ];
 
-// Check package.json main/module/source entry points if defined
+// Check package.json entry points
 try {
   const pkgPath = path.join(workspaceRoot, 'package.json');
   if (fs.existsSync(pkgPath)) {
@@ -290,7 +369,7 @@ try {
   }
 } catch (_) {}
 
-// Add layer public entry points (contracts) as recognized entries
+// Layer public entry points
 modules.forEach(mod => {
   standardEntryPoints.push(path.join(mod, 'index.ts'));
   standardEntryPoints.push(path.join(mod, 'index.tsx'));
@@ -338,8 +417,18 @@ allSourceFiles.forEach(file => {
 
 let hasErrors = false;
 
+if (pluginViolations.length > 0) {
+  console.error('\n[PLUGIN ISOLATION ERROR] Found illegal cross-plugin imports (violating docs/project-rules.md):');
+  pluginViolations.forEach(item => {
+    console.error(`  - File:       ${item.file} (Plugin: ${item.fromPlugin})`);
+    console.error(`    Import:     ${item.importPath} (Points to plugin: ${item.toPlugin})`);
+  });
+  console.error('\nPlugins must be completely isolated and interact strictly via EventBus & PluginContext.\n');
+  hasErrors = true;
+}
+
 if (layerViolations.length > 0) {
-  console.error('\n[ARCH DAG ERROR] Found illegal upward layer imports (violating DAG):');
+  console.error('\n[ARCH DAG ERROR] Found illegal upward layer imports (violating docs/architecture.md):');
   layerViolations.forEach(item => {
     console.error(`  - File:   ${item.file} (Layer: ${item.currentLayer})`);
     console.error(`    Import: ${item.importPath} (Illegal dependency on higher layer: ${item.importedLayer})`);
