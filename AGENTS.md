@@ -26,6 +26,21 @@
 2. **Format**: Append-only, 1 line/item (`- [YYYY-MM-DD] [scope] → [issue/compromise] → [remediation plan]`).
 3. **Lifecycle**: Resolved debt → remove from `docs/techdebt.md` on refactoring.
 
+## 🔄 Skill Feedback Loop
+
+1. **Objective**: Continuous skill evolution without degradation; synchronize skill specifications (`.agents/skills/*/SKILL.md`) and module contracts (`[module]/guide.md`) upon architectural changes or user directives.
+2. **Agent Responsibilities**: Upon task completion or conceptual user updates, the agent **MUST**:
+   - Analyze impact on underlying skill concepts and prepare a list of required specification adjustments.
+   - Run verification scripts (`node .agents/skills/check/arch-check.cjs`, `node .agents/skills/guide/scripts/audit-guide.cjs`, `npx tsc --noEmit` if code changed).
+   - Explicitly propose updating knowledge base / specifications: suggest `/learn` OR request direct chat confirmation (e.g., *"Yes, apply changes"*).
+3. **Audit**: Updating specifications and knowledge base (`.agents/skills/*/SKILL.md`, `[module]/guide.md`) is performed strictly under user control (`[CFON]`).
+4. **Onboarding New Skills (Zero Orphan Skills)**: When discovering or creating a new skill (`.agents/skills/*/SKILL.md`) missing a Feedback Loop section, the agent **MUST** classify the contract as incomplete and propose injecting the standard self-evolution block.
+5. **Generalization Filter (Zero Specificity Bias)**: All skill and rule improvements must be formulated strictly in generalized architectural terms (layers, DAG, ACL, interface contracts, lifecycles). Committing private paths, individual component/module names, or narrow project hacks into specifications is strictly prohibited.
+6. **Evolution Ledger (.agents/EVOLUTION.md)**: Every update to skill specifications or global rules must be logged in the append-only journal `.agents/EVOLUTION.md` (`- [YYYY-MM-DD] [skill/rule] → [trigger] → [generalized change]`).
+7. **Troubleshooting Harvest**: Systematic errors from local `[module]/TROUBLESHOOTING.md` files must be generalized into universal skill rules without referencing specific component names.
+8. **Upstream Sync**: As generalized skill improvements accumulate, the agent proposes publishing changes to the central repository via `/initialization push`.
+
+
 ---
 
 # AI Agent Rules
@@ -42,6 +57,7 @@
 8. **Short Style**: 1 fact = 1 line, `→`, abbreviations, [.agents/skills/short/SKILL.md](skills/short/SKILL.md)?
 9. **ACL & Validation**: External data validated at boundaries & mapped (no raw DTOs in UI/Store)?
 10. **Tech Debt**: No `// TODO` in code → registered in [docs/techdebt.md](docs/techdebt.md)?
+11. **Feedback Loop**: Skill specs (.agents/skills/*/SKILL.md) aligned with code changes / user feedback?
 
 ---
 
