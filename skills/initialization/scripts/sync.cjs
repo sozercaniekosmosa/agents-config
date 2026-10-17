@@ -85,7 +85,16 @@ if (action === 'pull') {
   runGit(`commit -m "${message}"`);
   runGit('push origin main');
   console.log('[sync] Successfully pushed changes to central repo!');
+} else if (action === 'status') {
+  const status = runGit('status --short');
+  console.log('[sync status]');
+  if (status && status.trim()) {
+    console.log(status.trim());
+  } else {
+    console.log('Clean. Local .agents working tree has no uncommitted changes.');
+  }
 } else {
-  console.error('[sync] Unknown action. Use "pull" or "push".');
+  console.error('[sync] Unknown action. Use "pull", "push", or "status".');
   process.exit(1);
 }
+

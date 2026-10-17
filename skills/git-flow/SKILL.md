@@ -319,3 +319,9 @@ Closes #<issue_number> <!-- или Closes https://github.com/atmus-gpna/asodu-in
 - **Типы**: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`.
 - **Автозакрытие**: `Closes #<issue_number>`.
 - **CFON**: см. `AGENTS.md`.
+
+## 🔄 Петля Эволюции Навыка (Feedback Loop)
+
+- При завершении цикла PR/коммита проверить соответствие регламента git-flow реальным процессам ветвления и валидаций.
+- При выявлении изменений чеклиста или линтеров → предложить актуализацию `.agents/skills/git-flow/SKILL.md` (`/learn` или подтверждение в чате).
+
