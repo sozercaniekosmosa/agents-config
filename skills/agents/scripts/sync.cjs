@@ -79,10 +79,38 @@ function ensureAgentGitignore() {
   }
 }
 
+function getRemoteCommonSkills() {
+  try {
+    const raw = runGit('ls-tree --name-only origin/main skills/', { silent: true });
+    return raw
+      .trim()
+      .split('\n')
+      .map(line => line.replace(/^skills\//, '').trim())
+      .filter(Boolean)
+      .map(name => (name === 'initialization' ? 'agents' : name));
+  } catch {
+    return ['check', 'debug', 'explorer', 'guide', 'observer', 'resolve', 'short', 'agents'];
+  }
+}
+
+function getUnclassifiedSkills(config) {
+  if (!config) return [];
+  const allSkills = getAvailableSkills();
+  const projectSkills = config.projectSkills || [];
+  let commonSkills = config.commonSkills;
+  if (!Array.isArray(commonSkills)) {
+    commonSkills = getRemoteCommonSkills();
+  }
+  const known = new Set([...projectSkills, ...commonSkills]);
+  return allSkills.filter(s => !known.has(s));
+}
+
 function getProjectConfig() {
   if (fs.existsSync(PROJECT_CONFIG_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(PROJECT_CONFIG_FILE, 'utf-8'));
+      const config = JSON.parse(fs.readFileSync(PROJECT_CONFIG_FILE, 'utf-8'));
+      config.unclassifiedSkills = getUnclassifiedSkills(config);
+      return config;
     } catch {
       return null;
     }
@@ -90,16 +118,65 @@ function getProjectConfig() {
   return null;
 }
 
-function setProjectConfig(branch, skills = []) {
+function setProjectConfig(branch, skills = [], commonSkills = null) {
   if (!fs.existsSync(CACHE_DIR)) {
     fs.mkdirSync(CACHE_DIR, { recursive: true });
   }
+  const allSkills = getAvailableSkills();
+  const projSkills = Array.isArray(skills) ? skills : [skills].filter(Boolean);
+  const commSkills = commonSkills !== null
+    ? (Array.isArray(commonSkills) ? commonSkills : [commonSkills].filter(Boolean))
+    : allSkills.filter(s => !projSkills.includes(s));
+
   const config = {
     projectBranch: branch,
-    projectSkills: Array.isArray(skills) ? skills : [skills].filter(Boolean),
+    projectSkills: projSkills.sort(),
+    commonSkills: commSkills.sort(),
     updatedAt: new Date().toISOString()
   };
   fs.writeFileSync(PROJECT_CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+  config.unclassifiedSkills = getUnclassifiedSkills(config);
+  return config;
+}
+
+function classifySkill(skill, type) {
+  const config = getProjectConfig();
+  if (!config || !config.projectBranch) {
+    console.error('[sync] Error: Project profile not set. Run "sync.cjs project-set <branch> [skills...]" first.');
+    process.exit(1);
+  }
+  const allSkills = getAvailableSkills();
+  if (!allSkills.includes(skill)) {
+    console.error(`[sync] Error: Skill "${skill}" does not exist in .agents/skills/`);
+    process.exit(1);
+  }
+
+  let projectSkills = new Set(config.projectSkills || []);
+  let commonSkills = new Set(Array.isArray(config.commonSkills) ? config.commonSkills : getRemoteCommonSkills());
+
+  if (type === 'project') {
+    projectSkills.add(skill);
+    commonSkills.delete(skill);
+  } else if (type === 'common') {
+    commonSkills.add(skill);
+    projectSkills.delete(skill);
+  } else {
+    console.error(`[sync] Error: Type must be "common" or "project", got "${type}"`);
+    process.exit(1);
+  }
+
+  config.projectSkills = Array.from(projectSkills).sort();
+  config.commonSkills = Array.from(commonSkills).sort();
+  config.updatedAt = new Date().toISOString();
+
+  fs.writeFileSync(PROJECT_CONFIG_FILE, JSON.stringify({
+    projectBranch: config.projectBranch,
+    projectSkills: config.projectSkills,
+    commonSkills: config.commonSkills,
+    updatedAt: config.updatedAt
+  }, null, 2), 'utf-8');
+
+  config.unclassifiedSkills = getUnclassifiedSkills(config);
   return config;
 }
 
@@ -241,6 +318,14 @@ function executePush(message) {
   const config = getProjectConfig();
   if (!config || !config.projectBranch) {
     console.error('[sync] Error: Project profile not set. Run "sync.cjs project-set <branch> [skills...]" first.');
+    process.exit(1);
+  }
+
+  const unclassified = getUnclassifiedSkills(config);
+  if (unclassified.length > 0) {
+    console.error(`[sync Quality Gate] Found unclassified skill(s): [${unclassified.join(', ')}].`);
+    console.error('[sync Quality Gate] Classify each skill as common or project before push:');
+    console.error('       node .agents/skills/agents/scripts/sync.cjs classify <skill> <common|project>');
     process.exit(1);
   }
 
@@ -397,6 +482,20 @@ if (action === 'branches') {
 } else if (action === 'project-reset') {
   resetProjectConfig();
   console.log('[sync] Project profile reset.');
+} else if (action === 'unclassified') {
+  const config = getProjectConfig();
+  const unclassified = getUnclassifiedSkills(config);
+  console.log(JSON.stringify(unclassified));
+} else if (action === 'classify') {
+  const skill = process.argv[3];
+  const type = process.argv[4];
+  if (!skill || !type) {
+    console.error('[sync] Error: skill name and type (common|project) are required. Usage: classify <skill> <common|project>');
+    process.exit(1);
+  }
+  const config = classifySkill(skill, type);
+  console.log(`[sync] Classified "${skill}" as ${type}.`);
+  console.log(JSON.stringify(config));
 } else if (action === 'pull') {
   executePull();
 } else if (action === 'push') {
@@ -409,6 +508,13 @@ if (action === 'branches') {
   console.log(`Current branch: ${currentBranch || 'unknown'}`);
   if (config) {
     console.log(`Saved project: branch "${config.projectBranch}", skills: [${config.projectSkills.join(', ')}]`);
+    if (config.commonSkills) {
+      console.log(`Common skills: [${config.commonSkills.join(', ')}]`);
+    }
+    const unclassified = getUnclassifiedSkills(config);
+    if (unclassified.length > 0) {
+      console.log(`⚠️  Unclassified skills: [${unclassified.join(', ')}] (run: classify <skill> <common|project>)`);
+    }
   } else {
     console.log('Saved project: None (not configured).');
   }
@@ -419,7 +525,7 @@ if (action === 'branches') {
     console.log('Clean. Local .agents working tree has no uncommitted changes.');
   }
 } else {
-  console.error('[sync] Unknown action. Use "branches", "skills", "project-get", "project-set", "project-reset", "pull", "push", or "status".');
+  console.error('[sync] Unknown action. Use "branches", "skills", "project-get", "project-set", "project-reset", "unclassified", "classify", "pull", "push", or "status".');
   process.exit(1);
 }
 
