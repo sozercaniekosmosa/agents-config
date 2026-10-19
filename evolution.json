@@ -1,0 +1,177 @@
+{
+  "$schema": "evolution-ledger",
+  "version": "1.0.0",
+  "telemetry": {
+    "lastAudit": "2026-10-19T07:58:24.843Z",
+    "requestCount": 5,
+    "patterns": {
+      "continuous-improvement": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:26:19.365Z",
+        "frictionCount": 0
+      },
+      "check": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:28:10.643Z",
+        "frictionCount": 0
+      },
+      "continuous-improvement-refactoring": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:43:26.770Z",
+        "frictionCount": 0
+      },
+      "evolution-migration": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:54:48.457Z",
+        "frictionCount": 0
+      },
+      "evolution-json-refactoring": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:56:47.952Z",
+        "frictionCount": 0
+      },
+      "observer-rename": {
+        "count": 1,
+        "lastSeen": "2026-10-19T07:03:12.612Z",
+        "frictionCount": 0
+      },
+      "jit-proactivity-rule": {
+        "count": 1,
+        "lastSeen": "2026-10-19T07:43:05.800Z",
+        "frictionCount": 0
+      },
+      "enhance-explorer-with-grill-me": {
+        "count": 1,
+        "lastSeen": "2026-10-19T08:07:53.557Z",
+        "frictionCount": 0
+      },
+      "enhance-resolve-with-goal": {
+        "count": 1,
+        "lastSeen": "2026-10-19T08:23:11.106Z",
+        "frictionCount": 0
+      },
+      "remove-pak-skill-everywhere-and-across-all-git-branches": {
+        "count": 1,
+        "lastSeen": "2026-10-19T08:31:25.585Z",
+        "frictionCount": 0
+      },
+      "initialization-push-to-origin-main": {
+        "count": 1,
+        "lastSeen": "2026-10-19T08:44:47.088Z",
+        "frictionCount": 0
+      },
+      "automate-git-sync-push-and-pull": {
+        "count": 1,
+        "lastSeen": "2026-10-19T09:17:03.210Z",
+        "frictionCount": 0
+      }
+    },
+    "skillUsage": {
+      "explorer": 2,
+      "telemetry": 4,
+      "check": 1,
+      "observer": 2,
+      "resolve": 1,
+      "pak": 1,
+      "initialization": 2
+    }
+  },
+  "history": [
+    {
+      "date": "2026-10-17",
+      "scope": "AGENTS.md & skills",
+      "trigger": "Continuous improvement requirement",
+      "improvement": "Introduced 2-level Feedback Loop (global directive + skill completion hooks)."
+    },
+    {
+      "date": "2026-10-17",
+      "scope": "arch-check.cjs",
+      "trigger": "Orphan skills prevention",
+      "improvement": "Added static audit for Feedback Loop contract across all .agents/skills/*/SKILL.md."
+    },
+    {
+      "date": "2026-10-17",
+      "scope": "AGENTS.md",
+      "trigger": "User architectural guardrail",
+      "improvement": "Enforced Generalization Standard (Zero Specificity Bias), Evolution Ledger, and Troubleshooting Harvest."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "initialization",
+      "trigger": "Multi-project skills separation",
+      "improvement": "2-stage pull/push with branch routing, persistent local profile cache (.agents/.cache/project.json), and isolated common/domain skills sync."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "pak & initialization",
+      "trigger": "Skill coupling decoupling",
+      "improvement": "Vendored diff utility locally in pak, isolated domain skills from main common branch."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "git-flow & initialization",
+      "trigger": "Domain workflow isolation",
+      "improvement": "Isolated git-flow to project branch, excluded from common stack."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "AGENTS.md & telemetry",
+      "trigger": "Continuous request analysis requirement",
+      "improvement": "Integrated request telemetry cache, necessity and sufficiency criteria for skills lifecycle, and 10 req / 2h / /check audit triggers."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "check & telemetry",
+      "trigger": "Single Responsibility & continuous improvement consolidation",
+      "improvement": "Decoupled skill linter, troubleshooting harvester, and upstream sync notice from check/arch-check.cjs into telemetry/scripts/telemetry.cjs."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "telemetry & EVOLUTION.json",
+      "trigger": "Repository tracking of continuous improvement",
+      "improvement": "Unified EVOLUTION.md and telemetry.json into tracked .agents/EVOLUTION.json with CLI history reporting."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "skills & evolution.json",
+      "trigger": "Naming alignment",
+      "improvement": "Renamed EVOLUTION.json to evolution.json and telemetry skill to observer"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "skills & feedback-loop",
+      "trigger": "Proactivity optimization",
+      "improvement": "Introduced Just-in-Time proactivity: silent nominal flow + immediate actionable diff upon friction >= 2 or recurring incidents"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "check & debug",
+      "trigger": "Single Responsibility Principle & Read-Only Quality Gate enforcement",
+      "improvement": "Decoupled auto-fix and debug invocation from check skill; converted check into 100% read-only static quality gate"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "explorer",
+      "trigger": "Integration of grill-me principles",
+      "improvement": "Added Grill-Me stress-testing (hidden assumptions, failure modes, 1-by-1 decision grilling, Showstopper Gate) and trade-off elicitation to explorer"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "resolve",
+      "trigger": "Integration of goal principles",
+      "improvement": "Added Definition of Done (DoD), Self-Correction Loop (up to 3 attempts), Anti-Thrashing Guard (retry/loop limit) and atomic progress checkpointing to resolve"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "pak",
+      "trigger": "user request: deprecate and delete pak skill",
+      "improvement": "removed pak skill and references across all branches"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "initialization",
+      "trigger": "automate 2-stage git push/pull in sync.cjs",
+      "improvement": "deterministic worktree merge, quality gate, commit detection"
+    }
+  ]
+}

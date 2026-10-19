@@ -36,9 +36,17 @@
 3. **Audit**: Updating specifications and knowledge base (`.agents/skills/*/SKILL.md`, `[module]/guide.md`) is performed strictly under user control (`[CFON]`).
 4. **Onboarding New Skills (Zero Orphan Skills)**: When discovering or creating a new skill (`.agents/skills/*/SKILL.md`) missing a Feedback Loop section, the agent **MUST** classify the contract as incomplete and propose injecting the standard self-evolution block.
 5. **Generalization Filter (Zero Specificity Bias)**: All skill and rule improvements must be formulated strictly in generalized architectural terms (layers, DAG, ACL, interface contracts, lifecycles). Committing private paths, individual component/module names, or narrow project hacks into specifications is strictly prohibited.
-6. **Evolution Ledger (.agents/EVOLUTION.md)**: Every update to skill specifications or global rules must be logged in the append-only journal `.agents/EVOLUTION.md` (`- [YYYY-MM-DD] [skill/rule] → [trigger] → [generalized change]`).
+6. **Evolution Ledger (.agents/evolution.json)**: Every update to skill specifications or global rules must be logged in the append-only journal `.agents/evolution.json` (`node .agents/skills/observer/scripts/observer.cjs --log-history [scope] [trigger] [improvement]`).
 7. **Troubleshooting Harvest**: Systematic errors from local `[module]/TROUBLESHOOTING.md` files must be generalized into universal skill rules without referencing specific component names.
 8. **Upstream Sync**: As generalized skill improvements accumulate, the agent proposes publishing changes to the central repository via `/initialization push`.
+9. **Observer & Continuous Request Analysis**:
+   - **Request Logging**: On completing any user task, record intent and friction in `.agents/evolution.json` (`node .agents/skills/observer/scripts/observer.cjs --record [intent] [skill] [friction]`).
+   - **Audit Triggers**: Audit executes when `requestCount >= 10` OR time delta from `lastAudit >= 2h` OR upon explicit `/check` / `/observer`.
+   - **Just-in-Time Proactivity**: Nominal flow remains silent in background. On friction >= 2 within a single task or recurring errors in `TROUBLESHOOTING.md` → immediately formulate a minimal actionable diff on task handoff, without waiting for batch audit thresholds.
+   - **Necessity & Sufficiency Criteria**:
+     - *New Skill*: Pattern recurrence >= 3 without existing skill coverage (Necessity) + deterministic DAG pipeline, I/O contracts, and feedback loop (Sufficiency).
+     - *Modify Skill*: User corrections / friction >= 2 OR systematic errors in `TROUBLESHOOTING.md` (Necessity) + generalized fix passing `arch-check.cjs` (Sufficiency).
+     - *Delete/Archive Skill*: 0 invocations across session horizon or 100% duplicate of another skill (Necessity) + zero external references in codebase and pre-archive backup (Sufficiency).
 
 
 ---
@@ -58,6 +66,7 @@
 9. **ACL & Validation**: External data validated at boundaries & mapped (no raw DTOs in UI/Store)?
 10. **Tech Debt**: No `// TODO` in code → registered in [docs/techdebt.md](docs/techdebt.md)?
 11. **Feedback Loop**: Skill specs (.agents/skills/*/SKILL.md) aligned with code changes / user feedback?
+12. **Observer**: Request logged via `observer.cjs --record` & audit thresholds evaluated?
 
 ---
 
