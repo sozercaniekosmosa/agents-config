@@ -42,6 +42,7 @@
 9. **Observer & Continuous Request Analysis**:
    - **Request Logging**: On completing any user task, record intent and friction in `.agents/evolution.json` (`node .agents/skills/observer/scripts/observer.cjs --record [intent] [skill] [friction]`).
    - **Audit Triggers**: Audit executes when `requestCount >= 10` OR time delta from `lastAudit >= 2h` OR upon explicit `/check` / `/observer`.
+   - **Just-in-Time Proactivity**: Nominal flow remains silent in background. On friction >= 2 within a single task or recurring errors in `TROUBLESHOOTING.md` → immediately formulate a minimal actionable diff on task handoff, without waiting for batch audit thresholds.
    - **Necessity & Sufficiency Criteria**:
      - *New Skill*: Pattern recurrence >= 3 without existing skill coverage (Necessity) + deterministic DAG pipeline, I/O contracts, and feedback loop (Sufficiency).
      - *Modify Skill*: User corrections / friction >= 2 OR systematic errors in `TROUBLESHOOTING.md` (Necessity) + generalized fix passing `arch-check.cjs` (Sufficiency).
