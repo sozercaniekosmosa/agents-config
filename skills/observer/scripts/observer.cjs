@@ -6,7 +6,7 @@ const { execSync } = require('child_process');
 
 const agentsDir = path.resolve(__dirname, '../../..');
 const workspaceRoot = path.resolve(agentsDir, '..');
-const evolutionFile = path.join(agentsDir, 'EVOLUTION.json');
+const evolutionFile = path.join(agentsDir, 'evolution.json');
 const skillsDir = path.join(agentsDir, 'skills');
 
 const privateDomainPatterns = [
@@ -85,7 +85,7 @@ function record(intent, skill, frictionCount = 0) {
   }
 
   saveEvolution(evolution);
-  console.log(`[TELEMETRY] Recorded intent "${normalizedIntent}" (Skill: ${skill || 'none'}). Total req count: ${telemetry.requestCount}`);
+  console.log(`[OBSERVER] Recorded intent "${normalizedIntent}" (Skill: ${skill || 'none'}). Total req count: ${telemetry.requestCount}`);
 }
 
 function checkThresholds() {
@@ -301,7 +301,7 @@ function audit(resetCounters = true) {
     saveEvolution(evolution);
   }
 
-  console.log('[TELEMETRY AUDIT] Результаты анализа непрерывного улучшения:');
+  console.log('[OBSERVER AUDIT] Результаты анализа непрерывного улучшения:');
   if (recommendations.length === 0) {
     console.log('- Нет активных рекомендаций по изменению, созданию или удалению навыков.');
   } else {
@@ -315,7 +315,7 @@ function audit(resetCounters = true) {
 
 function logHistory(scope, trigger, improvement) {
   if (!scope || !trigger || !improvement) {
-    console.error('[TELEMETRY ERROR] Использование: node telemetry.cjs --log-history <scope> <trigger> <improvement>');
+    console.error('[OBSERVER ERROR] Использование: node observer.cjs --log-history <scope> <trigger> <improvement>');
     process.exit(1);
   }
   const evolution = loadEvolution();
@@ -332,7 +332,7 @@ function logHistory(scope, trigger, improvement) {
 
 function printHistory() {
   const evolution = loadEvolution();
-  console.log('# Agent Skills Evolution Ledger (EVOLUTION.json)\n');
+  console.log('# Agent Skills Evolution Ledger (evolution.json)\n');
   if (!evolution.history || evolution.history.length === 0) {
     console.log('No history records found.');
     return;
@@ -344,7 +344,7 @@ function printHistory() {
 
 function scaffold(skillName) {
   if (!skillName) {
-    console.error('[TELEMETRY ERROR] Укажите имя навыка: node telemetry.cjs --scaffold [name]');
+    console.error('[OBSERVER ERROR] Укажите имя навыка: node observer.cjs --scaffold [name]');
     process.exit(1);
   }
   const targetDir = path.join(skillsDir, skillName.toLowerCase());
@@ -397,12 +397,12 @@ const command = args[0];
 
 if (!command || command === '--help' || command === '-h') {
   console.log(`Использование:
-  node telemetry.cjs --record <intent> [skill] [friction]
-  node telemetry.cjs --check-thresholds
-  node telemetry.cjs --audit
-  node telemetry.cjs --history
-  node telemetry.cjs --log-history <scope> <trigger> <improvement>
-  node telemetry.cjs --scaffold <skill-name>`);
+  node observer.cjs --record <intent> [skill] [friction]
+  node observer.cjs --check-thresholds
+  node observer.cjs --audit
+  node observer.cjs --history
+  node observer.cjs --log-history <scope> <trigger> <improvement>
+  node observer.cjs --scaffold <skill-name>`);
   process.exit(0);
 }
 

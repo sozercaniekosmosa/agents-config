@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "telemetry": {
     "lastAudit": "2026-10-19T06:53:14.070Z",
-    "requestCount": 1,
+    "requestCount": 2,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -24,11 +24,16 @@
         "count": 1,
         "lastSeen": "2026-10-19T06:54:48.457Z",
         "frictionCount": 0
+      },
+      "evolution-json-refactoring": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:56:47.952Z",
+        "frictionCount": 0
       }
     },
     "skillUsage": {
       "explorer": 1,
-      "telemetry": 3,
+      "telemetry": 4,
       "check": 1
     }
   },
@@ -86,6 +91,12 @@
       "scope": "telemetry & EVOLUTION.json",
       "trigger": "Repository tracking of continuous improvement",
       "improvement": "Unified EVOLUTION.md and telemetry.json into tracked .agents/EVOLUTION.json with CLI history reporting."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "skills & evolution.json",
+      "trigger": "Naming alignment",
+      "improvement": "Renamed EVOLUTION.json to evolution.json and telemetry skill to observer"
     }
   ]
 }

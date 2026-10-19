@@ -1,13 +1,13 @@
 ---
-name: telemetry
+name: observer
 description: >
-  Подсистема телеметрии запросов и непрерывной эволюции навыков.
+  Подсистема телеметрии запросов, аудита и непрерывной эволюции навыков.
   Аудит по триггерам (10 req, 2 часа, /check), анализ необходимости и достаточности
   для создания, модификации и удаления навыков, автогенерация каркасов.
-  Триггеры: /telemetry, "телеметрия", "проверь навыки", "аудит навыков".
+  Триггеры: /observer, "observer", "телеметрия", "проверь навыки", "аудит навыков".
 ---
 
-# Навык Telemetry (Телеметрия и Эволюция Навыков)
+# Навык Observer (Телеметрия и Эволюция Навыков)
 
 Подсистема непрерывного улучшения для накопления паттернов запросов пользователей, оценки трений при выполнении задач и формирования проактивных архитектурных рекомендаций по навыкам.
 
@@ -15,7 +15,7 @@ description: >
 
 ## 🔑 Ключевые Принципы
 
-1. **Токено-эффективность**: Хранение в `.agents/EVOLUTION.json` только агрегированных счетчиков и сигнатур (без дампов сырых промптов).
+1. **Токено-эффективность**: Хранение в `.agents/evolution.json` только агрегированных счетчиков и сигнатур (без дампов сырых промптов).
 2. **Комплексный аудит эволюции**:
    - *Skill Quality Linter*: проверка Feedback Loop (Zero Orphan Skills), лимит токенов/строк (>350), запрет абсолютных путей (`file:///`), запрет legacy XML, Zero Specificity Bias.
    - *Troubleshooting Harvester*: сбор и подсчет дефектов из всех `TROUBLESHOOTING.md` проекта для обобщения багов в правила.
@@ -23,7 +23,7 @@ description: >
 3. **Детерминированные триггеры**:
    - `requestCount >= 10`
    - `delta >= 2 hours` с момента последнего аудита
-   - Явный запуск через `/check` или `/telemetry`.
+   - Явный запуск через `/check` или `/observer`.
 4. **Критерии необходимости и достаточности**:
    - **Создание навыка**:
      - *Необходимость*: Повторяющийся паттерн req (частота >= 3) без покрытия текущими навыками.
@@ -41,22 +41,22 @@ description: >
 
 ```bash
 # 1. Зафиксировать выполненный запрос/паттерн и трения (0 = без трений, >0 = были правки/ошибки)
-node .agents/skills/telemetry/scripts/telemetry.cjs --record [intent] [skill] [friction]
+node .agents/skills/observer/scripts/observer.cjs --record [intent] [skill] [friction]
 
 # 2. Проверить достижение порогов аудита (10 req или 2 часа)
-node .agents/skills/telemetry/scripts/telemetry.cjs --check-thresholds
+node .agents/skills/observer/scripts/observer.cjs --check-thresholds
 
 # 3. Выполнить аудит навыков и сбросить счетчики
-node .agents/skills/telemetry/scripts/telemetry.cjs --audit
+node .agents/skills/observer/scripts/observer.cjs --audit
 
 # 4. Просмотреть историю эволюции навыков
-node .agents/skills/telemetry/scripts/telemetry.cjs --history
+node .agents/skills/observer/scripts/observer.cjs --history
 
 # 5. Добавить запись в историю эволюции
-node .agents/skills/telemetry/scripts/telemetry.cjs --log-history [scope] [trigger] [improvement]
+node .agents/skills/observer/scripts/observer.cjs --log-history [scope] [trigger] [improvement]
 
 # 6. Автогенерация шаблона нового навыка с Feedback Loop
-node .agents/skills/telemetry/scripts/telemetry.cjs --scaffold [skill-name]
+node .agents/skills/observer/scripts/observer.cjs --scaffold [skill-name]
 ```
 
 ---
@@ -64,11 +64,11 @@ node .agents/skills/telemetry/scripts/telemetry.cjs --scaffold [skill-name]
 ## 📋 Порядок Выполнения
 
 1. **Фиксация телеметрии**: На финальном шаге любой задачи агент регистрирует интент и использованный навык (`--record`).
-2. **Проверка порогов**: При наступлении триггеров (порог 10 req, 2 часа или запуск `/check`) выполняется `--audit`.
+2. **Проверка порогов**: При наступлении триггеров (порог 10 req, 2 часа или запуск `/check` / `/observer`) выполняется `--audit`.
 3. **Анализ рекомендаций**:
    - При наличии рекомендаций `[CREATE]` → предложить пользователю скаффолдинг каркаса (`--scaffold`).
    - При наличии `[MODIFY]` → предложить доработку соответствующего `SKILL.md` через `/learn`.
    - При наличии `[DELETE]` → предложить архивацию неиспользуемого навыка.
 4. **Петля Эволюции Навыка (Feedback Loop)**:
-   - Анализ концептуальных сдвигов: проверить, затронуло ли проектирование базовые принципы телеметрии или правил проекта.
+   - Анализ концептуальных сдвигов: проверить, затронуло ли проектирование базовые принципы observer или правил проекта.
    - При выявлении новых паттернов или правок пользователя → предложить актуализацию спецификации (`/learn` или подтверждение в чате).
