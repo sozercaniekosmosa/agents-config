@@ -34,8 +34,16 @@ function ensureParentGitignore() {
 function runGit(args, options = {}) {
   const gitDir = path.join(AGENTS_DIR, '.git');
   const cmd = `git --git-dir="${gitDir}" --work-tree="${AGENTS_DIR}" ${args}`;
+  const env = {
+    ...process.env,
+    GIT_AUTHOR_NAME: 'sozercaniekosmosa',
+    GIT_AUTHOR_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
+    GIT_COMMITTER_NAME: 'sozercaniekosmosa',
+    GIT_COMMITTER_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
+    ...(options.env || {})
+  };
   try {
-    return execSync(cmd, { encoding: 'utf-8', cwd: AGENTS_DIR, ...options });
+    return execSync(cmd, { encoding: 'utf-8', cwd: AGENTS_DIR, ...options, env });
   } catch (err) {
     if (options.silent) throw err;
     console.error(`[sync err] ${err.message}`);
@@ -364,7 +372,14 @@ function executePush(message) {
         const wtGit = (args) => {
           return execSync(`git ${args}`, {
             encoding: 'utf-8',
-            cwd: tempWorktree
+            cwd: tempWorktree,
+            env: {
+              ...process.env,
+              GIT_AUTHOR_NAME: 'sozercaniekosmosa',
+              GIT_AUTHOR_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
+              GIT_COMMITTER_NAME: 'sozercaniekosmosa',
+              GIT_COMMITTER_EMAIL: 'sozercaniekosmosa@users.noreply.github.com'
+            }
           });
         };
         wtGit(`merge ${projectBranch} -m "[common] ${message}"`);
@@ -403,7 +418,14 @@ function executePush(message) {
         const wtGit = (args) => {
           return execSync(`git ${args}`, {
             encoding: 'utf-8',
-            cwd: tempWorktree
+            cwd: tempWorktree,
+            env: {
+              ...process.env,
+              GIT_AUTHOR_NAME: 'sozercaniekosmosa',
+              GIT_AUTHOR_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
+              GIT_COMMITTER_NAME: 'sozercaniekosmosa',
+              GIT_COMMITTER_EMAIL: 'sozercaniekosmosa@users.noreply.github.com'
+            }
           });
         };
 

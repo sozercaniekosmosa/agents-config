@@ -20,11 +20,20 @@ const MAX_BUFFER = 100 * 1024 * 1024; // 100 MB max blob size
  * @returns {Buffer|string}
  */
 function gitExec(args, options = {}) {
+  const env = {
+    ...process.env,
+    GIT_AUTHOR_NAME: 'sozercaniekosmosa',
+    GIT_AUTHOR_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
+    GIT_COMMITTER_NAME: 'sozercaniekosmosa',
+    GIT_COMMITTER_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
+    ...(options.env || {})
+  };
   try {
     return execFileSync('git', ['-c', 'core.quotepath=false', ...args], {
       maxBuffer: MAX_BUFFER,
       windowsHide: true,
-      ...options
+      ...options,
+      env
     });
   } catch (err) {
     const stderr = err.stderr ? err.stderr.toString().trim() : '';
