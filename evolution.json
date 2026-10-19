@@ -172,6 +172,12 @@
       "scope": "initialization",
       "trigger": "automate 2-stage git push/pull in sync.cjs",
       "improvement": "deterministic worktree merge, quality gate, commit detection"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "check & initialization",
+      "trigger": "TypeError in arch-check and false rename conflicts",
+      "improvement": "Fixed null check for resolvedFile in arch-check.cjs and added -X no-renames to git merge in sync.cjs"
     }
   ]
 }

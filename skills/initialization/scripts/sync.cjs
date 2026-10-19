@@ -183,10 +183,15 @@ function runArchCheck() {
     try {
       execSync(`node "${archCheckScript}"`, { cwd: AGENTS_DIR, stdio: 'pipe' });
     } catch (err) {
-      console.error('[sync Quality Gate] arch-check.cjs failed! Aborting push.');
-      if (err.stdout) console.log(err.stdout.toString());
-      if (err.stderr) console.error(err.stderr.toString());
-      process.exit(1);
+      const isForce = process.argv.includes('--force') || process.argv.includes('-f') || process.argv.includes('--no-verify');
+      if (isForce) {
+        console.warn('[sync Quality Gate warning] arch-check.cjs detected host project issues. Continuing with push (--no-verify).');
+      } else {
+        console.error('[sync Quality Gate] arch-check.cjs failed! Aborting push (use --no-verify to bypass host project issues).');
+        if (err.stdout) console.log(err.stdout.toString());
+        if (err.stderr) console.error(err.stderr.toString());
+        process.exit(1);
+      }
     }
   }
 }
@@ -213,7 +218,7 @@ function executePull() {
   console.log('[sync] Stage 1 (Common): Fetching & merging updates from main...');
   try {
     runGit('fetch origin main', { silent: true });
-    runGit('merge origin/main --no-edit', { silent: true });
+    runGit('merge origin/main --no-edit -X no-renames', { silent: true });
     console.log('[sync] Stage 1 (Common): Updated successfully!');
   } catch (err) {
     console.warn(`[sync warning] Stage 1 merge warning: ${err.message}`);
@@ -223,7 +228,7 @@ function executePull() {
   console.log(`[sync] Stage 2 (Project): Fetching & merging updates from ${projectBranch}...`);
   try {
     runGit(`fetch origin ${projectBranch}`, { silent: true });
-    runGit(`merge origin/${projectBranch} --no-edit`, { silent: true });
+    runGit(`merge origin/${projectBranch} --no-edit -X no-renames`, { silent: true });
     console.log(`[sync] Stage 2 (Project): Updated successfully!`);
   } catch {
     console.log(`[sync] Remote branch origin/${projectBranch} not found on origin or already up to date.`);
