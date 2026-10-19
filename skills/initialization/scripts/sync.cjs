@@ -177,6 +177,20 @@ function ensureBranch(branch) {
   }
 }
 
+function runArchCheck() {
+  const archCheckScript = path.join(AGENTS_DIR, 'skills/check/arch-check.cjs');
+  if (fs.existsSync(archCheckScript)) {
+    try {
+      execSync(`node "${archCheckScript}"`, { cwd: AGENTS_DIR, stdio: 'pipe' });
+    } catch (err) {
+      console.error('[sync Quality Gate] arch-check.cjs failed! Aborting push.');
+      if (err.stdout) console.log(err.stdout.toString());
+      if (err.stderr) console.error(err.stderr.toString());
+      process.exit(1);
+    }
+  }
+}
+
 function executePull() {
   const config = getProjectConfig();
   if (!config || !config.projectBranch) {
@@ -189,11 +203,17 @@ function executePull() {
 
   ensureBranch(projectBranch);
 
+  const statusRaw = runGit('status --porcelain', { silent: true }).trim();
+  if (statusRaw) {
+    console.error('[sync] Error: Working tree has uncommitted changes. Commit or stash before pulling.');
+    process.exit(1);
+  }
+
   // Stage 1: Common updates from main
   console.log('[sync] Stage 1 (Common): Fetching & merging updates from main...');
   try {
-    runGit('fetch origin main');
-    runGit('merge origin/main --no-edit');
+    runGit('fetch origin main', { silent: true });
+    runGit('merge origin/main --no-edit', { silent: true });
     console.log('[sync] Stage 1 (Common): Updated successfully!');
   } catch (err) {
     console.warn(`[sync warning] Stage 1 merge warning: ${err.message}`);
@@ -202,8 +222,8 @@ function executePull() {
   // Stage 2: Project updates from project branch
   console.log(`[sync] Stage 2 (Project): Fetching & merging updates from ${projectBranch}...`);
   try {
-    runGit(`fetch origin ${projectBranch}`);
-    runGit(`merge origin/${projectBranch} --no-edit`);
+    runGit(`fetch origin ${projectBranch}`, { silent: true });
+    runGit(`merge origin/${projectBranch} --no-edit`, { silent: true });
     console.log(`[sync] Stage 2 (Project): Updated successfully!`);
   } catch {
     console.log(`[sync] Remote branch origin/${projectBranch} not found on origin or already up to date.`);
@@ -219,99 +239,117 @@ function executePush(message) {
     process.exit(1);
   }
 
+  runArchCheck();
+
   const { projectBranch, projectSkills = [] } = config;
   console.log(`[sync] Starting 2-stage push for project: ${projectBranch}...`);
 
   ensureBranch(projectBranch);
 
-  const statusRaw = runGit('status --porcelain');
-  const lines = statusRaw.split('\n').filter(Boolean);
-  const commonChanged = [];
-  const projectChanged = [];
-
-  for (const line of lines) {
-    const file = line.slice(3).trim();
-    const isProject = projectSkills.some(skill => file.startsWith(`skills/${skill}/`) || file === `skills/${skill}`);
-    if (isProject) {
-      projectChanged.push(file);
-    } else {
-      commonChanged.push(file);
-    }
+  // 1. Commit uncommitted changes on project branch if any
+  const statusRaw = runGit('status --porcelain', { silent: true }).trim();
+  if (statusRaw) {
+    runGit('add .');
+    runGit(`commit -m "[${projectBranch}] ${message}"`);
+    console.log(`[sync] Committed uncommitted changes on ${projectBranch}.`);
   }
 
-  // Stage 1: Push common files to origin main
+  // 2. Stage 1: Common files sync to origin main
   console.log('[sync] Stage 1 (Common): Checking common changes for main branch...');
-  if (commonChanged.length > 0) {
-    console.log(`[sync] Found ${commonChanged.length} common file(s) changed. Syncing to main...`);
-    const tempWorktree = path.join(CACHE_DIR, 'main-worktree');
-    try {
-      if (fs.existsSync(tempWorktree)) {
-        try { runGit(`worktree remove --force "${tempWorktree}"`, { silent: true }); } catch {}
-        fs.rmSync(tempWorktree, { recursive: true, force: true });
-      }
-      runGit('fetch origin main');
-      runGit(`worktree add --detach "${tempWorktree}" origin/main`);
+  runGit('fetch origin main', { silent: true });
 
-      for (const relFile of commonChanged) {
-        const srcPath = path.join(AGENTS_DIR, relFile);
-        const destPath = path.join(tempWorktree, relFile);
-        if (fs.existsSync(srcPath)) {
-          fs.mkdirSync(path.dirname(destPath), { recursive: true });
-          fs.copyFileSync(srcPath, destPath);
-        } else if (fs.existsSync(destPath)) {
-          fs.unlinkSync(destPath);
-        }
-      }
+  const tempWorktree = path.join(CACHE_DIR, 'main-worktree');
+  try {
+    if (fs.existsSync(tempWorktree)) {
+      try { runGit(`worktree remove --force "${tempWorktree}"`, { silent: true }); } catch {}
+      fs.rmSync(tempWorktree, { recursive: true, force: true });
+    }
 
-      const wtGit = (args) => {
-        const gitDir = path.join(AGENTS_DIR, '.git');
-        return execSync(`git --git-dir="${gitDir}" --work-tree="${tempWorktree}" ${args}`, {
-          encoding: 'utf-8',
-          cwd: tempWorktree
-        });
-      };
-
-      wtGit('add .');
-      const wtStatus = wtGit('status --porcelain').trim();
-      if (wtStatus) {
-        wtGit(`commit -m "[common] ${message}"`);
+    if (projectSkills.length === 0) {
+      // All skills are common! Check if projectBranch has commits ahead of origin/main
+      const aheadCount = parseInt(runGit(`rev-list --count origin/main..${projectBranch}`, { silent: true }).trim(), 10) || 0;
+      if (aheadCount > 0) {
+        console.log(`[sync] ${projectBranch} has ${aheadCount} commit(s) ahead of origin/main (all skills common). Syncing to main...`);
+        runGit(`worktree add --detach "${tempWorktree}" origin/main`);
+        const wtGit = (args) => {
+          return execSync(`git ${args}`, {
+            encoding: 'utf-8',
+            cwd: tempWorktree
+          });
+        };
+        wtGit(`merge ${projectBranch} -m "[common] ${message}"`);
         wtGit('push origin HEAD:main');
-        try { runGit('branch -f main HEAD'); } catch {}
+        try {
+          runGit('fetch origin main', { silent: true });
+          runGit('branch -f main origin/main', { silent: true });
+        } catch {}
         console.log('[sync] Stage 1 (Common): Pushed common changes to origin/main!');
       } else {
-        console.log('[sync] Stage 1 (Common): No actual diff in common files against origin/main.');
+        console.log('[sync] Stage 1 (Common): origin/main is already up to date with common changes.');
       }
-    } catch (err) {
-      console.error(`[sync err] Stage 1 push failed: ${err.message}`);
-    } finally {
-      try { runGit(`worktree remove --force "${tempWorktree}"`, { silent: true }); } catch {}
-      if (fs.existsSync(tempWorktree)) {
-        fs.rmSync(tempWorktree, { recursive: true, force: true });
+    } else {
+      // Project has specific skills -> find common files that differ between origin/main and projectBranch
+      const diffFilesRaw = runGit(`diff --name-only origin/main...${projectBranch}`, { silent: true }).trim();
+      const allChangedFiles = diffFilesRaw ? diffFilesRaw.split('\n').filter(Boolean) : [];
+      const commonChanged = allChangedFiles.filter(file => {
+        return !projectSkills.some(skill => file.startsWith(`skills/${skill}/`) || file === `skills/${skill}`);
+      });
+
+      if (commonChanged.length > 0) {
+        console.log(`[sync] Found ${commonChanged.length} common file(s) changed. Syncing to main...`);
+        runGit(`worktree add --detach "${tempWorktree}" origin/main`);
+
+        for (const relFile of commonChanged) {
+          const srcPath = path.join(AGENTS_DIR, relFile);
+          const destPath = path.join(tempWorktree, relFile);
+          if (fs.existsSync(srcPath)) {
+            fs.mkdirSync(path.dirname(destPath), { recursive: true });
+            fs.copyFileSync(srcPath, destPath);
+          } else if (fs.existsSync(destPath)) {
+            fs.unlinkSync(destPath);
+          }
+        }
+
+        const wtGit = (args) => {
+          return execSync(`git ${args}`, {
+            encoding: 'utf-8',
+            cwd: tempWorktree
+          });
+        };
+
+        wtGit('add .');
+        const wtStatus = wtGit('status --porcelain').trim();
+        if (wtStatus) {
+          wtGit(`commit -m "[common] ${message}"`);
+          wtGit('push origin HEAD:main');
+          try {
+            runGit('fetch origin main', { silent: true });
+            runGit('branch -f main origin/main', { silent: true });
+          } catch {}
+          console.log('[sync] Stage 1 (Common): Pushed common changes to origin/main!');
+        } else {
+          console.log('[sync] Stage 1 (Common): No actual diff in common files against origin/main.');
+        }
+      } else {
+        console.log('[sync] Stage 1 (Common): No common files changed.');
       }
     }
-
-    try {
-      runGit('merge main --no-edit');
-    } catch {}
-  } else {
-    console.log('[sync] Stage 1 (Common): No common files changed.');
+  } catch (err) {
+    console.error(`[sync err] Stage 1 push failed: ${err.message}`);
+  } finally {
+    try { runGit(`worktree remove --force "${tempWorktree}"`, { silent: true }); } catch {}
+    if (fs.existsSync(tempWorktree)) {
+      fs.rmSync(tempWorktree, { recursive: true, force: true });
+    }
   }
 
-  // Stage 2: Push project files to origin <projectBranch>
+  // 3. Stage 2: Push project branch
   console.log(`[sync] Stage 2 (Project): Checking project changes for ${projectBranch}...`);
-  runGit('add .');
-  const projStatus = runGit('status --porcelain').trim();
-  if (projStatus) {
-    runGit(`commit -m "[${projectBranch}] ${message}"`);
+  try {
     runGit(`push -u origin ${projectBranch}`);
-    console.log(`[sync] Stage 2 (Project): Pushed project changes to origin/${projectBranch}!`);
-  } else {
-    try {
-      runGit(`push -u origin ${projectBranch}`);
-      console.log(`[sync] Stage 2 (Project): Pushed pending commits to origin/${projectBranch}!`);
-    } catch {
-      console.log(`[sync] Stage 2 (Project): Branch origin/${projectBranch} is already up to date.`);
-    }
+    console.log(`[sync] Stage 2 (Project): Pushed branch to origin/${projectBranch}!`);
+  } catch (err) {
+    console.error(`[sync err] Stage 2 push failed: ${err.message}`);
   }
 
   console.log('[sync] 2-stage push completed successfully!');
