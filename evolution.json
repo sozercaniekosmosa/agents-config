@@ -2,8 +2,8 @@
   "$schema": "evolution-ledger",
   "version": "1.0.0",
   "telemetry": {
-    "lastAudit": "2026-10-19T07:18:12.240Z",
-    "requestCount": 0,
+    "lastAudit": "2026-10-19T07:58:24.843Z",
+    "requestCount": 2,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -34,13 +34,29 @@
         "count": 1,
         "lastSeen": "2026-10-19T07:03:12.612Z",
         "frictionCount": 0
+      },
+      "jit-proactivity-rule": {
+        "count": 1,
+        "lastSeen": "2026-10-19T07:43:05.800Z",
+        "frictionCount": 0
+      },
+      "enhance-explorer-with-grill-me": {
+        "count": 1,
+        "lastSeen": "2026-10-19T08:07:53.557Z",
+        "frictionCount": 0
+      },
+      "enhance-resolve-with-goal": {
+        "count": 1,
+        "lastSeen": "2026-10-19T08:23:11.106Z",
+        "frictionCount": 0
       }
     },
     "skillUsage": {
-      "explorer": 1,
+      "explorer": 2,
       "telemetry": 4,
       "check": 1,
-      "observer": 1
+      "observer": 2,
+      "resolve": 1
     }
   },
   "history": [
@@ -109,6 +125,24 @@
       "scope": "skills & feedback-loop",
       "trigger": "Proactivity optimization",
       "improvement": "Introduced Just-in-Time proactivity: silent nominal flow + immediate actionable diff upon friction >= 2 or recurring incidents"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "check & debug",
+      "trigger": "Single Responsibility Principle & Read-Only Quality Gate enforcement",
+      "improvement": "Decoupled auto-fix and debug invocation from check skill; converted check into 100% read-only static quality gate"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "explorer",
+      "trigger": "Integration of grill-me principles",
+      "improvement": "Added Grill-Me stress-testing (hidden assumptions, failure modes, 1-by-1 decision grilling, Showstopper Gate) and trade-off elicitation to explorer"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "resolve",
+      "trigger": "Integration of goal principles",
+      "improvement": "Added Definition of Done (DoD), Self-Correction Loop (up to 3 attempts), Anti-Thrashing Guard (retry/loop limit) and atomic progress checkpointing to resolve"
     }
   ]
 }
