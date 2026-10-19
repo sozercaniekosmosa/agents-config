@@ -13,4 +13,5 @@ Format:
 - [2026-10-17] [AGENTS.md] → User architectural guardrail → Enforced Generalization Standard (Zero Specificity Bias), Evolution Ledger, and Troubleshooting Harvest.
 - [2026-10-19] [initialization] → Multi-project skills separation → 2-stage pull/push with branch routing, persistent local profile cache (.agents/.cache/project.json), and isolated common/domain skills sync.
 - [2026-10-19] [pak & initialization] → Skill coupling decoupling → Vendored diff utility locally in pak, isolated domain skills from main common branch.
+- [2026-10-19] [git-flow & initialization] → Domain workflow isolation → Isolated git-flow to project branch, excluded from common stack.
 
