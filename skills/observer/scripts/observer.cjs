@@ -231,7 +231,7 @@ function checkUpstreamSync() {
       ).trim();
       if (status) {
         console.log('\n[UPSTREAM SYNC NOTICE] Local skill improvements detected in .agents/. Consider publishing:');
-        console.log('  node .agents/skills/initialization/scripts/sync.cjs push "description"\n');
+        console.log('  node .agents/skills/agents/scripts/sync.cjs push "description"\n');
       }
     } catch (_) {}
   }

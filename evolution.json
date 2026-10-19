@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "telemetry": {
     "lastAudit": "2026-10-19T10:52:13.154Z",
-    "requestCount": 2,
+    "requestCount": 15,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -89,6 +89,81 @@
         "count": 1,
         "lastSeen": "2026-10-19T11:09:05.586Z",
         "frictionCount": 0
+      },
+      "pull-skills-and-config-updates-from-origin": {
+        "count": 1,
+        "lastSeen": "2026-10-19T09:33:00.165Z",
+        "frictionCount": 0
+      },
+      "разработка-навыка-pocket": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:03:43.734Z",
+        "frictionCount": 0
+      },
+      "pocket-create-docs": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:13:15.029Z",
+        "frictionCount": 0
+      },
+      "pocket-remote-push-and-wipe-local": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:25:43.384Z",
+        "frictionCount": 0
+      },
+      "pocket-list": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:28:40.043Z",
+        "frictionCount": 0
+      },
+      "pocket-unpack": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:29:47.882Z",
+        "frictionCount": 0
+      },
+      "pocket-update": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:41:25.781Z",
+        "frictionCount": 0
+      },
+      "save-.storage-to-pocket-тата": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:45:38.816Z",
+        "frictionCount": 0
+      },
+      "list-pockets": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:52:10.106Z",
+        "frictionCount": 0
+      },
+      "unpack-pocket-1": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:53:41.759Z",
+        "frictionCount": 1
+      },
+      "unpack-pocket-1-completed": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:54:51.609Z",
+        "frictionCount": 0
+      },
+      "add-remote-delete-step-to-pocket-skill": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:58:02.729Z",
+        "frictionCount": 0
+      },
+      "delete-pocket-1-from-remote-completed": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:00:28.391Z",
+        "frictionCount": 0
+      },
+      "rename-/initialization-to-agents": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:10:23.495Z",
+        "frictionCount": 0
+      },
+      "add-unclassified-skills-gating-to-agents": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:21:57.621Z",
+        "frictionCount": 1
       }
     },
     "skillUsage": {
@@ -98,10 +173,12 @@
       "observer": 2,
       "resolve": 1,
       "pak": 1,
-      "initialization": 2,
+      "initialization": 3,
       "initialization & check": 1,
       "table-server-filter": 2,
-      "git-flow": 1
+      "git-flow": 1,
+      "pocket": 12,
+      "agents": 2
     }
   },
   "history": [
@@ -206,6 +283,42 @@
       "scope": "check & initialization",
       "trigger": "TypeError in arch-check and false rename conflicts",
       "improvement": "Fixed null check for resolvedFile in arch-check.cjs and added -X no-renames to git merge in sync.cjs"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "pocket",
+      "trigger": "user request",
+      "improvement": "Add remote push to agents-config and Zero Local Footprint"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "pocket",
+      "trigger": "user request: default list on no args and [YY-MM-DD-HH-MM] timestamp",
+      "improvement": "List pockets on no args, parse name before/after paths with auto-generated fallback, and enforce [YY-MM-DD-HH-MM] timestamp"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "skills/pocket/core/git.cjs",
+      "trigger": "Cyrillic pocket names octal escape",
+      "improvement": "Added -c core.quotepath=false to gitExec to preserve Unicode names"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "skills/pocket",
+      "trigger": "User requested remote pocket deletion after unpack",
+      "improvement": "Added delete command to git/cli and mandatory post-unpack deletion prompt in SKILL.md"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "agents",
+      "trigger": "user request",
+      "improvement": "Renamed /initialization skill to /agents"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "agents",
+      "trigger": "user request: unclassified skills gating",
+      "improvement": "Added UNCLASSIFIED_SKILLS detection, classify command, and Quality Gate to sync.cjs & SKILL.md"
     }
   ]
 }

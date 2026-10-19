@@ -1,12 +1,12 @@
 ---
-name: initialization
+name: agents
 description: >
   Интерактивное заполнение файлов правил в docs (context.md, project-rules.md, architecture.md) через диалог с пользователем,
   а также синхронизация (pull/push) навыков и конфигураций с центральным репозиторием sozercaniekosmosa/agents-config.
-  Триггеры: /initialization, "инициализируй проект", "заполни rules", "настрой правила проекта", "инициализация правил", "обнови навыки", "pull rules", "push rules".
+  Триггеры: /agents, /initialization, "инициализируй проект", "заполни rules", "настрой правила проекта", "инициализация правил", "обнови навыки", "pull rules", "push rules".
 ---
 
-# Навык Initialization (Инициализация и Синхронизация правил проекта)
+# Навык Agents (Инициализация и Синхронизация правил проекта)
 
 Навык решает 2 ключевые задачи:
 
@@ -23,48 +23,57 @@ description: >
 - `<ветка_проекта>`: специфичные для проекта навыки (напр. `cemis`, `table-server-filter`).
 
 Перед операцией `pull` или `push` агент проверяет текущую привязку проекта:
-`node .agents/skills/initialization/scripts/sync.cjs project-get`
+`node .agents/skills/agents/scripts/sync.cjs project-get`
 
 1. **Если проект НЕ настроен (`NOT_CONFIGURED`)**:
    - Агент запрашивает актуальный список веток из git:
-     `node .agents/skills/initialization/scripts/sync.cjs branches`
+     `node .agents/skills/agents/scripts/sync.cjs branches`
    - Выводит пользователю нумерованный список в чат:
      1. `<ветка_1>`
      2. `<ветка_2>`
      ...
      N. `[Создать новую ветку под проект]`
    - **При выборе существующей ветки**:
-     - Агент выводит список доступных навыков (`node .agents/skills/initialization/scripts/sync.cjs skills`).
+     - Агент выводит список доступных навыков (`node .agents/skills/agents/scripts/sync.cjs skills`).
      - Пользователь указывает, какие из них проектные.
-     - Агент сохраняет выбор: `node .agents/skills/initialization/scripts/sync.cjs project-set <ветка> <навык1,навык2...>`.
+     - Агент сохраняет выбор: `node .agents/skills/agents/scripts/sync.cjs project-set <ветка> <навык1,навык2...>`.
    - **При выборе `[Создать новую ветку под проект]`**:
      - Агент запрашивает имя ветки (предлагает имя текущей рабочей директории проекта).
      - Выводит список всех навыков из `.agents/skills/` для отметки проектных.
-     - Создает ветку и сохраняет профиль: `node .agents/skills/initialization/scripts/sync.cjs project-set <ветка> <навык1,навык2...>`.
+     - Создает ветку и сохраняет профиль: `node .agents/skills/agents/scripts/sync.cjs project-set <ветка> <навык1,навык2...>`.
    - Выбор сохраняется в `.agents/.cache/project.json` (исключен из git через `.gitignore`).
 
 2. **Если проект уже настроен**:
-   - Агент **НЕ запрашивает список веток повторно**, а сразу выполняет 2-этапное действие.
-   - Сброс/смена привязки: `node .agents/skills/initialization/scripts/sync.cjs project-reset`.
+   - Агент **НЕ запрашивает список веток повторно**, а проверяет наличие неклассифицированных навыков (`UNCLASSIFIED_SKILLS`).
+   - Сброс/смена привязки: `node .agents/skills/agents/scripts/sync.cjs project-reset`.
+
+3. **Обнаружение новых неклассифицированных навыков (`UNCLASSIFIED_SKILLS`)**:
+   - При появлении в `.agents/skills/` папок, отсутствующих в кэше (`projectSkills` + `commonSkills`):
+     - `node .agents/skills/agents/scripts/sync.cjs unclassified` возвращает список новых навыков.
+     - Агент **ОБЯЗАН** остановить операцию push и спросить у пользователя назначение каждого нового навыка:
+       *"Навык [имя] общий (main для всех проектов) или проектный (<ветка_проекта>)?"*
+     - Применить выбор пользователя: `node .agents/skills/agents/scripts/sync.cjs classify <навык> <common|project>`.
+   - `sync.cjs push` автоматически блокирует выполнение (Quality Gate) при наличии неклассифицированных навыков, предотвращая случайную утечку проектных навыков в `main`.
 
 ---
 
 ### 🔄 2-Этапные Операции Синхронизации
 
 1. **Загрузка / Обновление (Pull)**:
-   - Вызов: `/initialization pull`, "загрузи", "обнови", "скачай".
-   - Действие: `node .agents/skills/initialization/scripts/sync.cjs pull`
+   - Вызов: `/agents pull` (или `/initialization pull`), "загрузи", "обнови", "скачай".
+   - Действие: `node .agents/skills/agents/scripts/sync.cjs pull`
    - **Этап 1 (Общие навыки)**: `fetch origin main` → `merge origin/main` (обновление общих навыков и `AGENTS.md`).
    - **Этап 2 (Проектные навыки)**: `fetch origin <ветка_проекта>` → `merge origin/<ветка_проекта>` (обновление проектных навыков).
 
 2. **Публикация Изменений (Push)**:
-   - Вызов: `/initialization push [сообщение коммита]`, "сохрани", "запуш", "опубликуй", "отправь".
-   - Действие: `node .agents/skills/initialization/scripts/sync.cjs push "сообщение"`
+   - Вызов: `/agents push [сообщение коммита]` (или `/initialization push`), "сохрани", "запуш", "опубликуй", "отправь".
+   - **Предварительный аудит**: проверка `sync.cjs unclassified`. При наличии неклассифицированных навыков → обязательный запрос пользователю и вызов `sync.cjs classify <навык> <common|project>`.
+   - Действие: `node .agents/skills/agents/scripts/sync.cjs push "сообщение"`
    - **Этап 1 (Общие навыки)**: коммит и изолированный пуш общих навыков и стандартов в `origin main` (без утечки специфичных проектных навыков в главную ветку).
    - **Этап 2 (Проектные навыки)**: коммит и пуш проектных навыков в `origin <ветка_проекта>`.
 
 3. **Интерактивный Режим (по умолчанию)**:
-   - При вызове `/initialization` без аргументов агент задает вопрос пользователю через `ask_question`:
+   - При вызове `/agents` без аргументов агент задает вопрос пользователю через `ask_question`:
      - Опция 1: `[Интерактивная инициализация правил проекта]` -> перейти к Диалогу Q&A (Этап 1-3).
      - Опция 2: `[Pull: Скачать обновленные навыки и стандарты]` -> проверить ветку проекта и выполнить `sync.cjs pull`.
      - Опция 3: `[Push: Опубликовать текущие изменения навыков]` -> проверить ветку проекта и выполнить `sync.cjs push`.

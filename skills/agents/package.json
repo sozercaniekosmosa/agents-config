@@ -1,5 +1,5 @@
 {
-  "name": "initialization-skill",
+  "name": "agents-skill",
   "version": "1.0.0",
   "private": true,
   "description": "Agent config sync & project init skill",
