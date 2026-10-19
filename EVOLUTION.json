@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "telemetry": {
     "lastAudit": "2026-10-19T06:53:14.070Z",
-    "requestCount": 0,
+    "requestCount": 1,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -19,11 +19,16 @@
         "count": 1,
         "lastSeen": "2026-10-19T06:43:26.770Z",
         "frictionCount": 0
+      },
+      "evolution-migration": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:54:48.457Z",
+        "frictionCount": 0
       }
     },
     "skillUsage": {
       "explorer": 1,
-      "telemetry": 2,
+      "telemetry": 3,
       "check": 1
     }
   },

@@ -36,11 +36,11 @@
 3. **Audit**: Updating specifications and knowledge base (`.agents/skills/*/SKILL.md`, `[module]/guide.md`) is performed strictly under user control (`[CFON]`).
 4. **Onboarding New Skills (Zero Orphan Skills)**: When discovering or creating a new skill (`.agents/skills/*/SKILL.md`) missing a Feedback Loop section, the agent **MUST** classify the contract as incomplete and propose injecting the standard self-evolution block.
 5. **Generalization Filter (Zero Specificity Bias)**: All skill and rule improvements must be formulated strictly in generalized architectural terms (layers, DAG, ACL, interface contracts, lifecycles). Committing private paths, individual component/module names, or narrow project hacks into specifications is strictly prohibited.
-6. **Evolution Ledger (.agents/EVOLUTION.md)**: Every update to skill specifications or global rules must be logged in the append-only journal `.agents/EVOLUTION.md` (`- [YYYY-MM-DD] [skill/rule] → [trigger] → [generalized change]`).
+6. **Evolution Ledger (.agents/EVOLUTION.json)**: Every update to skill specifications or global rules must be logged in the append-only journal `.agents/EVOLUTION.json` (`node .agents/skills/telemetry/scripts/telemetry.cjs --log-history [scope] [trigger] [improvement]`).
 7. **Troubleshooting Harvest**: Systematic errors from local `[module]/TROUBLESHOOTING.md` files must be generalized into universal skill rules without referencing specific component names.
 8. **Upstream Sync**: As generalized skill improvements accumulate, the agent proposes publishing changes to the central repository via `/initialization push`.
 9. **Telemetry & Continuous Request Analysis**:
-   - **Request Logging**: On completing any user task, record intent and friction in `.agents/.cache/telemetry.json` (`node .agents/skills/telemetry/scripts/telemetry.cjs --record [intent] [skill] [friction]`).
+   - **Request Logging**: On completing any user task, record intent and friction in `.agents/EVOLUTION.json` (`node .agents/skills/telemetry/scripts/telemetry.cjs --record [intent] [skill] [friction]`).
    - **Audit Triggers**: Audit executes when `requestCount >= 10` OR time delta from `lastAudit >= 2h` OR upon explicit `/check` / `/telemetry`.
    - **Necessity & Sufficiency Criteria**:
      - *New Skill*: Pattern recurrence >= 3 without existing skill coverage (Necessity) + deterministic DAG pipeline, I/O contracts, and feedback loop (Sufficiency).
