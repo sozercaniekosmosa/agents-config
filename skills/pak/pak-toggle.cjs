@@ -21,7 +21,7 @@ try {
   Diff = require('diff');
 } catch (_) {
   try {
-    Diff = require(path.resolve(__dirname, '../confluence/scripts/vendor/diff.cjs'));
+    Diff = require(path.resolve(__dirname, 'vendor/diff.cjs'));
   } catch (__) {
     Diff = null;
   }
