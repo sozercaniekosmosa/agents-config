@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "telemetry": {
     "lastAudit": "2026-10-19T10:05:49.634Z",
-    "requestCount": 11,
+    "requestCount": 13,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -129,6 +129,16 @@
         "count": 1,
         "lastSeen": "2026-10-19T11:00:28.391Z",
         "frictionCount": 0
+      },
+      "rename-/initialization-to-agents": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:10:23.495Z",
+        "frictionCount": 0
+      },
+      "add-unclassified-skills-gating-to-agents": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:21:57.621Z",
+        "frictionCount": 1
       }
     },
     "skillUsage": {
@@ -139,7 +149,8 @@
       "resolve": 1,
       "pak": 1,
       "initialization": 3,
-      "pocket": 12
+      "pocket": 12,
+      "agents": 2
     }
   },
   "history": [
@@ -274,6 +285,12 @@
       "scope": "agents",
       "trigger": "user request",
       "improvement": "Renamed /initialization skill to /agents"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "agents",
+      "trigger": "user request: unclassified skills gating",
+      "improvement": "Added UNCLASSIFIED_SKILLS detection, classify command, and Quality Gate to sync.cjs & SKILL.md"
     }
   ]
 }
