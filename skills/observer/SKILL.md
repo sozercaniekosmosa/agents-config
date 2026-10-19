@@ -19,7 +19,7 @@ description: >
 2. **Комплексный аудит эволюции**:
    - *Skill Quality Linter*: проверка Feedback Loop (Zero Orphan Skills), лимит токенов/строк (>350), запрет абсолютных путей (`file:///`), запрет legacy XML, Zero Specificity Bias.
    - *Troubleshooting Harvester*: сбор и подсчет дефектов из всех `TROUBLESHOOTING.md` проекта для обобщения багов в правила.
-   - *Upstream Sync Monitor*: контроль несохраненных/неопубликованных изменений в `.agents/.git` с подсказкой `initialization push`.
+   - *Upstream Sync Monitor*: контроль несохраненных/неопубликованных изменений в `.agents/.git` с подсказкой `agents push`.
 3. **Детерминированные триггеры**:
    - `requestCount >= 10`
    - `delta >= 2 hours` с момента последнего аудита
