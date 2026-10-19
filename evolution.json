@@ -2,8 +2,8 @@
   "$schema": "evolution-ledger",
   "version": "1.0.0",
   "telemetry": {
-    "lastAudit": "2026-10-19T06:53:14.070Z",
-    "requestCount": 2,
+    "lastAudit": "2026-10-19T07:02:48.111Z",
+    "requestCount": 1,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -29,12 +29,18 @@
         "count": 1,
         "lastSeen": "2026-10-19T06:56:47.952Z",
         "frictionCount": 0
+      },
+      "observer-rename": {
+        "count": 1,
+        "lastSeen": "2026-10-19T07:03:12.612Z",
+        "frictionCount": 0
       }
     },
     "skillUsage": {
       "explorer": 1,
       "telemetry": 4,
-      "check": 1
+      "check": 1,
+      "observer": 1
     }
   },
   "history": [
