@@ -39,6 +39,13 @@
 6. **Evolution Ledger (.agents/EVOLUTION.md)**: Every update to skill specifications or global rules must be logged in the append-only journal `.agents/EVOLUTION.md` (`- [YYYY-MM-DD] [skill/rule] → [trigger] → [generalized change]`).
 7. **Troubleshooting Harvest**: Systematic errors from local `[module]/TROUBLESHOOTING.md` files must be generalized into universal skill rules without referencing specific component names.
 8. **Upstream Sync**: As generalized skill improvements accumulate, the agent proposes publishing changes to the central repository via `/initialization push`.
+9. **Telemetry & Continuous Request Analysis**:
+   - **Request Logging**: On completing any user task, record intent and friction in `.agents/.cache/telemetry.json` (`node .agents/skills/telemetry/scripts/telemetry.cjs --record [intent] [skill] [friction]`).
+   - **Audit Triggers**: Audit executes when `requestCount >= 10` OR time delta from `lastAudit >= 2h` OR upon explicit `/check` / `/telemetry`.
+   - **Necessity & Sufficiency Criteria**:
+     - *New Skill*: Pattern recurrence >= 3 without existing skill coverage (Necessity) + deterministic DAG pipeline, I/O contracts, and feedback loop (Sufficiency).
+     - *Modify Skill*: User corrections / friction >= 2 OR systematic errors in `TROUBLESHOOTING.md` (Necessity) + generalized fix passing `arch-check.cjs` (Sufficiency).
+     - *Delete/Archive Skill*: 0 invocations across session horizon or 100% duplicate of another skill (Necessity) + zero external references in codebase and pre-archive backup (Sufficiency).
 
 
 ---
@@ -58,6 +65,7 @@
 9. **ACL & Validation**: External data validated at boundaries & mapped (no raw DTOs in UI/Store)?
 10. **Tech Debt**: No `// TODO` in code → registered in [docs/techdebt.md](docs/techdebt.md)?
 11. **Feedback Loop**: Skill specs (.agents/skills/*/SKILL.md) aligned with code changes / user feedback?
+12. **Telemetry**: Request logged via `telemetry.cjs --record` & audit thresholds evaluated?
 
 ---
 

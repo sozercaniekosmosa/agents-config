@@ -14,4 +14,6 @@ Format:
 - [2026-10-19] [initialization] → Multi-project skills separation → 2-stage pull/push with branch routing, persistent local profile cache (.agents/.cache/project.json), and isolated common/domain skills sync.
 - [2026-10-19] [pak & initialization] → Skill coupling decoupling → Vendored diff utility locally in pak, isolated domain skills from main common branch.
 - [2026-10-19] [git-flow & initialization] → Domain workflow isolation → Isolated git-flow to project branch, excluded from common stack.
+- [2026-10-19] [AGENTS.md & telemetry] → Continuous request analysis requirement → Integrated request telemetry cache (.agents/.cache/telemetry.json), necessity and sufficiency criteria for skills lifecycle, and 10 req / 2h / /check audit triggers.
+- [2026-10-19] [check & telemetry] → Single Responsibility & continuous improvement consolidation → Decoupled skill linter, troubleshooting harvester, and upstream sync notice from check/arch-check.cjs into telemetry/scripts/telemetry.cjs.
 

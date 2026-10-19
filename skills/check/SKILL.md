@@ -33,6 +33,11 @@ description: >
    ```
 2. Выполнить проверку соответствия архитектурным требованиям и стандартам проекта из `docs/` (`docs/project-rules.md`, `docs/architecture.md`, детали в `references/architectural_audit.md`).
 3. При любых архитектурных нарушениях или падении скрипта → перейти к **Шагу 3 (Отладка)**.
+4. Выполнить аудит телеметрии и эволюции навыков:
+   ```bash
+   node .agents/skills/telemetry/scripts/telemetry.cjs --audit
+   ```
+   При наличии рекомендаций `[CREATE]`, `[MODIFY]`, `[DELETE]` → включить их в итоговый отчет.
 
 ### Шаг 3. Отладка и устранение ошибок (debug)
 
