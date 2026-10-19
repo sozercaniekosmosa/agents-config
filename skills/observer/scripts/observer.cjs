@@ -86,6 +86,10 @@ function record(intent, skill, frictionCount = 0) {
 
   saveEvolution(evolution);
   console.log(`[OBSERVER] Recorded intent "${normalizedIntent}" (Skill: ${skill || 'none'}). Total req count: ${telemetry.requestCount}`);
+
+  if (Number(frictionCount) >= 2 || telemetry.patterns[normalizedIntent].frictionCount >= 2) {
+    console.log(`\n[JUST-IN-TIME PROACTIVE ALERT] High friction detected for "${normalizedIntent}" (friction: ${telemetry.patterns[normalizedIntent].frictionCount}). Proactively formulate a targeted diff for skill "${skill || 'specification'}" to eliminate friction.\n`);
+  }
 }
 
 function checkThresholds() {
