@@ -2,8 +2,8 @@
   "$schema": "evolution-ledger",
   "version": "1.0.0",
   "telemetry": {
-    "lastAudit": "2026-10-19T10:05:49.634Z",
-    "requestCount": 15,
+    "lastAudit": "2026-10-19T10:52:13.154Z",
+    "requestCount": 18,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -65,9 +65,34 @@
         "lastSeen": "2026-10-19T09:17:03.210Z",
         "frictionCount": 0
       },
-      "pull-skills-and-config-updates-from-origin": {
+      "fix-arch-check-null-guard-and-sync-pull-merge-options": {
         "count": 1,
-        "lastSeen": "2026-10-19T09:33:00.165Z",
+        "lastSeen": "2026-10-19T09:27:26.503Z",
+        "frictionCount": 0
+      },
+      "audit-tables-without-server-filter": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:23:45.287Z",
+        "frictionCount": 0
+      },
+      "server-filter-for-formula-search-tags-modal": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:41:06.583Z",
+        "frictionCount": 0
+      },
+      "fix-lint-in-formula-search-tags-modal": {
+        "count": 1,
+        "lastSeen": "2026-10-19T10:54:02.248Z",
+        "frictionCount": 0
+      },
+      "git-flow-pr-creation-for-tags-server-filter": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:09:05.586Z",
+        "frictionCount": 0
+      },
+      "pull-skills-and-config-updates-from-origin": {
+        "count": 2,
+        "lastSeen": "2026-10-19T11:32:04.529Z",
         "frictionCount": 0
       },
       "разработка-навыка-pocket": {
@@ -149,18 +174,26 @@
         "count": 1,
         "lastSeen": "2026-10-19T11:39:42.738Z",
         "frictionCount": 0
+      },
+      "/agents-pull": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:44:11.813Z",
+        "frictionCount": 0
       }
     },
     "skillUsage": {
       "explorer": 2,
       "telemetry": 4,
-      "check": 1,
+      "check": 2,
       "observer": 2,
       "resolve": 1,
       "pak": 1,
       "initialization": 3,
+      "initialization & check": 1,
+      "table-server-filter": 2,
+      "git-flow": 1,
       "pocket": 12,
-      "agents": 4
+      "agents": 5
     }
   },
   "history": [
@@ -202,81 +235,51 @@
     },
     {
       "date": "2026-10-19",
-      "scope": "AGENTS.md & telemetry",
-      "trigger": "Continuous request analysis requirement",
-      "improvement": "Integrated request telemetry cache, necessity and sufficiency criteria for skills lifecycle, and 10 req / 2h / /check audit triggers."
+      "scope": "skills",
+      "trigger": "User request: remove pak skill everywhere",
+      "improvement": "Deleted pak skill directory and cleaned references"
     },
     {
       "date": "2026-10-19",
-      "scope": "check & telemetry",
-      "trigger": "Single Responsibility & continuous improvement consolidation",
-      "improvement": "Decoupled skill linter, troubleshooting harvester, and upstream sync notice from check/arch-check.cjs into telemetry/scripts/telemetry.cjs."
-    },
-    {
-      "date": "2026-10-19",
-      "scope": "telemetry & EVOLUTION.json",
-      "trigger": "Repository tracking of continuous improvement",
-      "improvement": "Unified EVOLUTION.md and telemetry.json into tracked .agents/EVOLUTION.json with CLI history reporting."
-    },
-    {
-      "date": "2026-10-19",
-      "scope": "skills & evolution.json",
-      "trigger": "Naming alignment",
-      "improvement": "Renamed EVOLUTION.json to evolution.json and telemetry skill to observer"
-    },
-    {
-      "date": "2026-10-19",
-      "scope": "skills & feedback-loop",
-      "trigger": "Proactivity optimization",
-      "improvement": "Introduced Just-in-Time proactivity: silent nominal flow + immediate actionable diff upon friction >= 2 or recurring incidents"
-    },
-    {
-      "date": "2026-10-19",
-      "scope": "check & debug",
-      "trigger": "Single Responsibility Principle & Read-Only Quality Gate enforcement",
-      "improvement": "Decoupled auto-fix and debug invocation from check skill; converted check into 100% read-only static quality gate"
+      "scope": "AGENTS.md",
+      "trigger": "Skill feedback loop refinement",
+      "improvement": "Enforced JIT proactivity on friction >= 2 / systematic errors; added Necessity & Sufficiency Criteria for skill lifecycle."
     },
     {
       "date": "2026-10-19",
       "scope": "explorer",
-      "trigger": "Integration of grill-me principles",
-      "improvement": "Added Grill-Me stress-testing (hidden assumptions, failure modes, 1-by-1 decision grilling, Showstopper Gate) and trade-off elicitation to explorer"
+      "trigger": "Integration with built-in interview slash command",
+      "improvement": "Added /grill-me recommendation to Stage 2 of explorer skill"
     },
     {
       "date": "2026-10-19",
       "scope": "resolve",
-      "trigger": "Integration of goal principles",
-      "improvement": "Added Definition of Done (DoD), Self-Correction Loop (up to 3 attempts), Anti-Thrashing Guard (retry/loop limit) and atomic progress checkpointing to resolve"
+      "trigger": "Autonomous goal-seeking mode requirement",
+      "improvement": "Added /goal trigger and instruction to resolve skill for thorough autonomous execution"
     },
     {
       "date": "2026-10-19",
-      "scope": "pak",
-      "trigger": "user request: deprecate and delete pak skill",
-      "improvement": "removed pak skill and references across all branches"
+      "scope": "skills/debug",
+      "trigger": "Empirical Debugging standard & Log cleanup",
+      "improvement": "Automated log capture to .agents/skills/debug/.logs/, added strategic temporary instrumentation rule, mandatory cleanup post-fix."
     },
     {
       "date": "2026-10-19",
-      "scope": "initialization",
-      "trigger": "automate 2-stage git push/pull in sync.cjs",
-      "improvement": "deterministic worktree merge, quality gate, commit detection"
+      "scope": "AGENTS.md & skills",
+      "trigger": "Token economy & ASD-STE100 compliance",
+      "improvement": "Integrated short skill into Agent Operational Rules as strict communication standard."
     },
     {
       "date": "2026-10-19",
-      "scope": "check & initialization",
-      "trigger": "TypeError in arch-check and false rename conflicts",
-      "improvement": "Fixed null check for resolvedFile in arch-check.cjs and added -X no-renames to git merge in sync.cjs"
+      "scope": "AGENTS.md & skills",
+      "trigger": "Centralized rule & contract management",
+      "improvement": "Renamed AGENTS.md to AGENTS.md, centralized project-specific rules into docs/."
     },
     {
       "date": "2026-10-19",
-      "scope": "pocket",
-      "trigger": "user request",
-      "improvement": "Add remote push to agents-config and Zero Local Footprint"
-    },
-    {
-      "date": "2026-10-19",
-      "scope": "pocket",
-      "trigger": "user request: default list on no args and [YY-MM-DD-HH-MM] timestamp",
-      "improvement": "List pockets on no args, parse name before/after paths with auto-generated fallback, and enforce [YY-MM-DD-HH-MM] timestamp"
+      "scope": "skills/pocket",
+      "trigger": "User requested zero-footprint encrypted zip storage in agents-config branch pocket",
+      "improvement": "Created pocket skill with CLI, AES-256-GCM encryption, timestamped naming, zero local footprint, and fast git plumbing"
     },
     {
       "date": "2026-10-19",
