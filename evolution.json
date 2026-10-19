@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "telemetry": {
     "lastAudit": "2026-10-19T10:05:49.634Z",
-    "requestCount": 13,
+    "requestCount": 15,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -139,6 +139,16 @@
         "count": 1,
         "lastSeen": "2026-10-19T11:21:57.621Z",
         "frictionCount": 1
+      },
+      "/agents-push": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:24:15.203Z",
+        "frictionCount": 0
+      },
+      "remove-author-leak-and-enforce-clean-identity": {
+        "count": 1,
+        "lastSeen": "2026-10-19T11:39:42.738Z",
+        "frictionCount": 0
       }
     },
     "skillUsage": {
@@ -150,7 +160,7 @@
       "pak": 1,
       "initialization": 3,
       "pocket": 12,
-      "agents": 2
+      "agents": 4
     }
   },
   "history": [
@@ -291,6 +301,12 @@
       "scope": "agents",
       "trigger": "user request: unclassified skills gating",
       "improvement": "Added UNCLASSIFIED_SKILLS detection, classify command, and Quality Gate to sync.cjs & SKILL.md"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "skills & git",
+      "trigger": "User privacy guardrail",
+      "improvement": "Enforce repository author & committer override to sozercaniekosmosa in sync and pocket scripts"
     }
   ]
 }
