@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "telemetry": {
     "lastAudit": "2026-10-19T07:58:24.843Z",
-    "requestCount": 2,
+    "requestCount": 3,
     "patterns": {
       "continuous-improvement": {
         "count": 1,
@@ -49,6 +49,11 @@
         "count": 1,
         "lastSeen": "2026-10-19T08:23:11.106Z",
         "frictionCount": 0
+      },
+      "remove-pak-skill-everywhere-and-across-all-git-branches": {
+        "count": 1,
+        "lastSeen": "2026-10-19T08:31:25.585Z",
+        "frictionCount": 0
       }
     },
     "skillUsage": {
@@ -56,7 +61,8 @@
       "telemetry": 4,
       "check": 1,
       "observer": 2,
-      "resolve": 1
+      "resolve": 1,
+      "pak": 1
     }
   },
   "history": [
