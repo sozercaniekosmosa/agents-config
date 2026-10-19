@@ -143,6 +143,12 @@
       "scope": "resolve",
       "trigger": "Integration of goal principles",
       "improvement": "Added Definition of Done (DoD), Self-Correction Loop (up to 3 attempts), Anti-Thrashing Guard (retry/loop limit) and atomic progress checkpointing to resolve"
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "pak",
+      "trigger": "user request: deprecate and delete pak skill",
+      "improvement": "removed pak skill and references across all branches"
     }
   ]
 }
