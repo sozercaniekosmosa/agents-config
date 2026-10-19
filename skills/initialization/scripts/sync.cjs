@@ -272,8 +272,7 @@ function executePush(message) {
         console.log(`[sync] ${projectBranch} has ${aheadCount} commit(s) ahead of origin/main (all skills common). Syncing to main...`);
         runGit(`worktree add --detach "${tempWorktree}" origin/main`);
         const wtGit = (args) => {
-          const gitDir = path.join(AGENTS_DIR, '.git');
-          return execSync(`git --git-dir="${gitDir}" --work-tree="${tempWorktree}" ${args}`, {
+          return execSync(`git ${args}`, {
             encoding: 'utf-8',
             cwd: tempWorktree
           });
@@ -312,8 +311,7 @@ function executePush(message) {
         }
 
         const wtGit = (args) => {
-          const gitDir = path.join(AGENTS_DIR, '.git');
-          return execSync(`git --git-dir="${gitDir}" --work-tree="${tempWorktree}" ${args}`, {
+          return execSync(`git ${args}`, {
             encoding: 'utf-8',
             cwd: tempWorktree
           });
