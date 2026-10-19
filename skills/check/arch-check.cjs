@@ -291,12 +291,15 @@ function checkFile(filePath) {
             relativeLower === 'types.ts';
 
           // Check if resolved target is itself a submodule's entry point
-          const normResolved = path.resolve(resolvedFile);
-          const isSubmoduleEntry = modules.some(m => {
-            const entryTs = path.resolve(m, 'index.ts');
-            const entryTsx = path.resolve(m, 'index.tsx');
-            return normResolved === entryTs || normResolved === entryTsx;
-          });
+          const normResolved = resolvedFile ? path.resolve(resolvedFile) : null;
+          const isSubmoduleEntry = Boolean(
+            normResolved &&
+            modules.some(m => {
+              const entryTs = path.resolve(m, 'index.ts');
+              const entryTsx = path.resolve(m, 'index.tsx');
+              return normResolved === entryTs || normResolved === entryTsx;
+            })
+          );
 
           if (!isEntryFile && !isSubmoduleEntry) {
             offendingImports.push({
