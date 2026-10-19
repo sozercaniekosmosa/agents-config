@@ -6,8 +6,7 @@ const { execSync } = require('child_process');
 
 const agentsDir = path.resolve(__dirname, '../../..');
 const workspaceRoot = path.resolve(agentsDir, '..');
-const cacheDir = path.join(agentsDir, '.cache');
-const telemetryFile = path.join(cacheDir, 'telemetry.json');
+const evolutionFile = path.join(agentsDir, 'EVOLUTION.json');
 const skillsDir = path.join(agentsDir, 'skills');
 
 const privateDomainPatterns = [
@@ -17,75 +16,91 @@ const privateDomainPatterns = [
   /\bSceneContentEditor\b/i,
 ];
 
-function loadTelemetry() {
-  if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true });
-  }
-  if (!fs.existsSync(telemetryFile)) {
+function loadEvolution() {
+  if (!fs.existsSync(evolutionFile)) {
     const initial = {
-      lastAudit: new Date().toISOString(),
-      requestCount: 0,
-      patterns: {},
-      skillUsage: {},
+      $schema: 'evolution-ledger',
+      version: '1.0.0',
+      telemetry: {
+        lastAudit: new Date().toISOString(),
+        requestCount: 0,
+        patterns: {},
+        skillUsage: {},
+      },
+      history: [],
     };
-    fs.writeFileSync(telemetryFile, JSON.stringify(initial, null, 2), 'utf8');
+    fs.writeFileSync(evolutionFile, JSON.stringify(initial, null, 2), 'utf8');
     return initial;
   }
   try {
-    return JSON.parse(fs.readFileSync(telemetryFile, 'utf8'));
+    const data = JSON.parse(fs.readFileSync(evolutionFile, 'utf8'));
+    if (!data.telemetry) {
+      data.telemetry = {
+        lastAudit: new Date().toISOString(),
+        requestCount: 0,
+        patterns: {},
+        skillUsage: {},
+      };
+    }
+    if (!data.history) data.history = [];
+    return data;
   } catch (_) {
     return {
-      lastAudit: new Date().toISOString(),
-      requestCount: 0,
-      patterns: {},
-      skillUsage: {},
+      $schema: 'evolution-ledger',
+      version: '1.0.0',
+      telemetry: {
+        lastAudit: new Date().toISOString(),
+        requestCount: 0,
+        patterns: {},
+        skillUsage: {},
+      },
+      history: [],
     };
   }
 }
 
-function saveTelemetry(data) {
-  if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true });
-  }
-  fs.writeFileSync(telemetryFile, JSON.stringify(data, null, 2), 'utf8');
+function saveEvolution(data) {
+  fs.writeFileSync(evolutionFile, JSON.stringify(data, null, 2), 'utf8');
 }
 
 function record(intent, skill, frictionCount = 0) {
-  const data = loadTelemetry();
-  data.requestCount = (data.requestCount || 0) + 1;
+  const evolution = loadEvolution();
+  const telemetry = evolution.telemetry;
+  telemetry.requestCount = (telemetry.requestCount || 0) + 1;
 
   const normalizedIntent = (intent || 'general').trim().toLowerCase().replace(/\s+/g, '-');
-  if (!data.patterns[normalizedIntent]) {
-    data.patterns[normalizedIntent] = {
+  if (!telemetry.patterns[normalizedIntent]) {
+    telemetry.patterns[normalizedIntent] = {
       count: 0,
       lastSeen: new Date().toISOString(),
       frictionCount: 0,
     };
   }
-  data.patterns[normalizedIntent].count += 1;
-  data.patterns[normalizedIntent].lastSeen = new Date().toISOString();
-  data.patterns[normalizedIntent].frictionCount += Number(frictionCount) || 0;
+  telemetry.patterns[normalizedIntent].count += 1;
+  telemetry.patterns[normalizedIntent].lastSeen = new Date().toISOString();
+  telemetry.patterns[normalizedIntent].frictionCount += Number(frictionCount) || 0;
 
   if (skill && skill !== 'none') {
-    data.skillUsage[skill] = (data.skillUsage[skill] || 0) + 1;
+    telemetry.skillUsage[skill] = (telemetry.skillUsage[skill] || 0) + 1;
   }
 
-  saveTelemetry(data);
-  console.log(`[TELEMETRY] Recorded intent "${normalizedIntent}" (Skill: ${skill || 'none'}). Total req count: ${data.requestCount}`);
+  saveEvolution(evolution);
+  console.log(`[TELEMETRY] Recorded intent "${normalizedIntent}" (Skill: ${skill || 'none'}). Total req count: ${telemetry.requestCount}`);
 }
 
 function checkThresholds() {
-  const data = loadTelemetry();
+  const evolution = loadEvolution();
+  const telemetry = evolution.telemetry;
   const now = Date.now();
-  const last = new Date(data.lastAudit || now).getTime();
+  const last = new Date(telemetry.lastAudit || now).getTime();
   const diffHours = (now - last) / (1000 * 60 * 60);
 
-  const countThreshold = (data.requestCount || 0) >= 10;
+  const countThreshold = (telemetry.requestCount || 0) >= 10;
   const timeThreshold = diffHours >= 2;
 
   const result = {
     triggered: countThreshold || timeThreshold,
-    requestCount: data.requestCount || 0,
+    requestCount: telemetry.requestCount || 0,
     hoursSinceAudit: Number(diffHours.toFixed(2)),
     reasons: [],
   };
@@ -229,7 +244,8 @@ function audit(resetCounters = true) {
   checkUpstreamSync();
 
   // 4. Analyze request telemetry and thresholds
-  const data = loadTelemetry();
+  const evolution = loadEvolution();
+  const telemetry = evolution.telemetry;
   const recommendations = [];
 
   const existingSkills = fs.existsSync(skillsDir)
@@ -237,7 +253,7 @@ function audit(resetCounters = true) {
     : [];
 
   // Criteria: Creation
-  for (const [intent, stat] of Object.entries(data.patterns || {})) {
+  for (const [intent, stat] of Object.entries(telemetry.patterns || {})) {
     const matchesSkill = existingSkills.some((s) => s.toLowerCase() === intent);
     if (!matchesSkill && stat.count >= 3) {
       recommendations.push({
@@ -251,7 +267,7 @@ function audit(resetCounters = true) {
   }
 
   // Criteria: Modification
-  for (const [intent, stat] of Object.entries(data.patterns || {})) {
+  for (const [intent, stat] of Object.entries(telemetry.patterns || {})) {
     if (stat.frictionCount >= 2) {
       recommendations.push({
         type: 'modify',
@@ -264,10 +280,10 @@ function audit(resetCounters = true) {
   }
 
   // Criteria: Deletion / Archival
-  const totalCalls = Object.values(data.skillUsage || {}).reduce((a, b) => a + b, 0);
+  const totalCalls = Object.values(telemetry.skillUsage || {}).reduce((a, b) => a + b, 0);
   if (totalCalls >= 15) {
     for (const skill of existingSkills) {
-      if (!data.skillUsage[skill] || data.skillUsage[skill] === 0) {
+      if (!telemetry.skillUsage[skill] || telemetry.skillUsage[skill] === 0) {
         recommendations.push({
           type: 'delete',
           target: skill,
@@ -280,9 +296,9 @@ function audit(resetCounters = true) {
   }
 
   if (resetCounters) {
-    data.lastAudit = new Date().toISOString();
-    data.requestCount = 0;
-    saveTelemetry(data);
+    telemetry.lastAudit = new Date().toISOString();
+    telemetry.requestCount = 0;
+    saveEvolution(evolution);
   }
 
   console.log('[TELEMETRY AUDIT] Результаты анализа непрерывного улучшения:');
@@ -295,6 +311,35 @@ function audit(resetCounters = true) {
   }
 
   return recommendations;
+}
+
+function logHistory(scope, trigger, improvement) {
+  if (!scope || !trigger || !improvement) {
+    console.error('[TELEMETRY ERROR] Использование: node telemetry.cjs --log-history <scope> <trigger> <improvement>');
+    process.exit(1);
+  }
+  const evolution = loadEvolution();
+  const today = new Date().toISOString().split('T')[0];
+  evolution.history.push({
+    date: today,
+    scope,
+    trigger,
+    improvement,
+  });
+  saveEvolution(evolution);
+  console.log(`[EVOLUTION LEDGER] Recorded: - [${today}] [${scope}] → [${trigger}] → [${improvement}]`);
+}
+
+function printHistory() {
+  const evolution = loadEvolution();
+  console.log('# Agent Skills Evolution Ledger (EVOLUTION.json)\n');
+  if (!evolution.history || evolution.history.length === 0) {
+    console.log('No history records found.');
+    return;
+  }
+  for (const item of evolution.history) {
+    console.log(`- [${item.date}] [${item.scope}] → [${item.trigger}] → [${item.improvement}]`);
+  }
 }
 
 function scaffold(skillName) {
@@ -355,6 +400,8 @@ if (!command || command === '--help' || command === '-h') {
   node telemetry.cjs --record <intent> [skill] [friction]
   node telemetry.cjs --check-thresholds
   node telemetry.cjs --audit
+  node telemetry.cjs --history
+  node telemetry.cjs --log-history <scope> <trigger> <improvement>
   node telemetry.cjs --scaffold <skill-name>`);
   process.exit(0);
 }
@@ -368,6 +415,12 @@ switch (command) {
     break;
   case '--audit':
     audit(true);
+    break;
+  case '--history':
+    printHistory();
+    break;
+  case '--log-history':
+    logHistory(args[1], args[2], args[3]);
     break;
   case '--scaffold':
     scaffold(args[1]);

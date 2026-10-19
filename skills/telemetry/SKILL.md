@@ -15,7 +15,7 @@ description: >
 
 ## 🔑 Ключевые Принципы
 
-1. **Токено-эффективность**: Хранение в `.agents/.cache/telemetry.json` только агрегированных счетчиков и сигнатур (без дампов сырых промптов).
+1. **Токено-эффективность**: Хранение в `.agents/EVOLUTION.json` только агрегированных счетчиков и сигнатур (без дампов сырых промптов).
 2. **Комплексный аудит эволюции**:
    - *Skill Quality Linter*: проверка Feedback Loop (Zero Orphan Skills), лимит токенов/строк (>350), запрет абсолютных путей (`file:///`), запрет legacy XML, Zero Specificity Bias.
    - *Troubleshooting Harvester*: сбор и подсчет дефектов из всех `TROUBLESHOOTING.md` проекта для обобщения багов в правила.
@@ -49,7 +49,13 @@ node .agents/skills/telemetry/scripts/telemetry.cjs --check-thresholds
 # 3. Выполнить аудит навыков и сбросить счетчики
 node .agents/skills/telemetry/scripts/telemetry.cjs --audit
 
-# 4. Автогенерация шаблона нового навыка с Feedback Loop
+# 4. Просмотреть историю эволюции навыков
+node .agents/skills/telemetry/scripts/telemetry.cjs --history
+
+# 5. Добавить запись в историю эволюции
+node .agents/skills/telemetry/scripts/telemetry.cjs --log-history [scope] [trigger] [improvement]
+
+# 6. Автогенерация шаблона нового навыка с Feedback Loop
 node .agents/skills/telemetry/scripts/telemetry.cjs --scaffold [skill-name]
 ```
 

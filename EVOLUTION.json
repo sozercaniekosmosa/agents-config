@@ -1,0 +1,86 @@
+{
+  "$schema": "evolution-ledger",
+  "version": "1.0.0",
+  "telemetry": {
+    "lastAudit": "2026-10-19T06:53:14.070Z",
+    "requestCount": 0,
+    "patterns": {
+      "continuous-improvement": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:26:19.365Z",
+        "frictionCount": 0
+      },
+      "check": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:28:10.643Z",
+        "frictionCount": 0
+      },
+      "continuous-improvement-refactoring": {
+        "count": 1,
+        "lastSeen": "2026-10-19T06:43:26.770Z",
+        "frictionCount": 0
+      }
+    },
+    "skillUsage": {
+      "explorer": 1,
+      "telemetry": 2,
+      "check": 1
+    }
+  },
+  "history": [
+    {
+      "date": "2026-10-17",
+      "scope": "AGENTS.md & skills",
+      "trigger": "Continuous improvement requirement",
+      "improvement": "Introduced 2-level Feedback Loop (global directive + skill completion hooks)."
+    },
+    {
+      "date": "2026-10-17",
+      "scope": "arch-check.cjs",
+      "trigger": "Orphan skills prevention",
+      "improvement": "Added static audit for Feedback Loop contract across all .agents/skills/*/SKILL.md."
+    },
+    {
+      "date": "2026-10-17",
+      "scope": "AGENTS.md",
+      "trigger": "User architectural guardrail",
+      "improvement": "Enforced Generalization Standard (Zero Specificity Bias), Evolution Ledger, and Troubleshooting Harvest."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "initialization",
+      "trigger": "Multi-project skills separation",
+      "improvement": "2-stage pull/push with branch routing, persistent local profile cache (.agents/.cache/project.json), and isolated common/domain skills sync."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "pak & initialization",
+      "trigger": "Skill coupling decoupling",
+      "improvement": "Vendored diff utility locally in pak, isolated domain skills from main common branch."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "git-flow & initialization",
+      "trigger": "Domain workflow isolation",
+      "improvement": "Isolated git-flow to project branch, excluded from common stack."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "AGENTS.md & telemetry",
+      "trigger": "Continuous request analysis requirement",
+      "improvement": "Integrated request telemetry cache, necessity and sufficiency criteria for skills lifecycle, and 10 req / 2h / /check audit triggers."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "check & telemetry",
+      "trigger": "Single Responsibility & continuous improvement consolidation",
+      "improvement": "Decoupled skill linter, troubleshooting harvester, and upstream sync notice from check/arch-check.cjs into telemetry/scripts/telemetry.cjs."
+    },
+    {
+      "date": "2026-10-19",
+      "scope": "telemetry & EVOLUTION.json",
+      "trigger": "Repository tracking of continuous improvement",
+      "improvement": "Unified EVOLUTION.md and telemetry.json into tracked .agents/EVOLUTION.json with CLI history reporting."
+    }
+  ]
+}
