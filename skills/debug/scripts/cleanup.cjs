@@ -12,7 +12,7 @@ const path = require('path');
 function findProjectRoot(startDir) {
   let current = startDir;
   while (true) {
-    if (fs.existsSync(path.join(current, 'package.json')) || fs.existsSync(path.join(current, '.git'))) {
+    if (fs.existsSync(path.join(current, 'package.json'))) {
       return current;
     }
     const parent = path.dirname(current);

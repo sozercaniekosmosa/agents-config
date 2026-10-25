@@ -57,6 +57,7 @@ tmp/
 # Custom Skill & Archive Backups
 .archives/
 .cache/
+.agents/.cache/evolution.json
 
 # Skill Storage & Local Cache
 skills/confluence/storage/
