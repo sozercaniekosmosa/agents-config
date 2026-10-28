@@ -6,6 +6,12 @@
 2. **No Residuals**: On refactoring/replacing abstraction, del old impl completely (after migrating deps).
 3. **Scope**: Apply to all skills modifying code (esp. `/resolve`). Clean up at final plan steps.
 
+## 📦 File Size & Refactoring Limits
+
+1. **Strict Limit**: 400–500 LOC per file.
+2. **Decomposition**: Exceeding threshold (>400–500) → create new directory named after module/component.
+3. **Structure**: Place original file into new folder + extract excess logic into new files (preserve external contract via `index.ts`).
+
 ## 📄 Contract & Documentation Sync
 
 1. **Technical Compliance**: Specs/contracts → strictly match real system capabilities.
