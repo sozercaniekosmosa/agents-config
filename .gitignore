@@ -67,3 +67,6 @@ skills/confluence/storage/
 # Skill Logs & Debug Reports
 skills/debug/.logs/
 **/.logs/
+
+# Local Plugins
+plugins/
