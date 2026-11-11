@@ -2,268 +2,132 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
-const agentsDir = path.resolve(__dirname, '../../..');
-const workspaceRoot = path.resolve(agentsDir, '..');
-const evolutionFile = path.join(agentsDir, 'evolution.json');
-const skillsDir = path.join(agentsDir, 'skills');
+const telemetry = require('./core/telemetry.cjs');
+const harvester = require('./core/harvester.cjs');
+const rules = require('./core/rules.cjs');
 
-const privateDomainPatterns = [
-  /\bsrc\/components\/tree\b/i,
-  /\bsrc\/components\/graph\b/i,
-  /\btreeGraphLayout\b/i,
-  /\bSceneContentEditor\b/i,
-];
+const {
+  agentsDir,
+  workspaceRoot,
+  evolutionFile,
+  skillsDir,
+  configFile,
+  DEFAULT_CONFIG,
+  loadObserverConfig,
+  skillAliases,
+  domainCoverageMatrix,
+  archivedSkills,
+  getKnownSkills,
+  resolveValidSkill,
+  getSkillMetadata,
+  getBranchConfigSkills,
+  categorizeIntent,
+  atomicWriteJson,
+  loadEvolution,
+  saveEvolution,
+  checkAutoResolveIncident,
+  record,
+  checkThresholds,
+  printLastIncident,
+  cleanTelemetry,
+  pruneTelemetry,
+  auditTelemetryHygiene,
+  logHistory,
+  printHistory,
+} = telemetry;
 
-function loadEvolution() {
-  if (!fs.existsSync(evolutionFile)) {
-    const initial = {
-      $schema: 'evolution-ledger',
-      version: '1.0.0',
-      telemetry: {
-        lastAudit: new Date().toISOString(),
-        requestCount: 0,
-        patterns: {},
-        skillUsage: {},
-      },
-      history: [],
-    };
-    fs.writeFileSync(evolutionFile, JSON.stringify(initial, null, 2), 'utf8');
-    return initial;
-  }
-  try {
-    const data = JSON.parse(fs.readFileSync(evolutionFile, 'utf8'));
-    if (!data.telemetry) {
-      data.telemetry = {
-        lastAudit: new Date().toISOString(),
-        requestCount: 0,
-        patterns: {},
-        skillUsage: {},
-      };
-    }
-    if (!data.history) data.history = [];
-    return data;
-  } catch (_) {
-    return {
-      $schema: 'evolution-ledger',
-      version: '1.0.0',
-      telemetry: {
-        lastAudit: new Date().toISOString(),
-        requestCount: 0,
-        patterns: {},
-        skillUsage: {},
-      },
-      history: [],
-    };
-  }
-}
+const {
+  privateDomainPatterns,
+  slugify,
+  auditSkillsQuality,
+  harvestTroubleshooting,
+  auditTechDebt,
+  checkUpstreamSync,
+} = harvester;
 
-function saveEvolution(data) {
-  fs.writeFileSync(evolutionFile, JSON.stringify(data, null, 2), 'utf8');
-}
+const {
+  scanHooksOrder,
+  scanRawDtoInUi,
+  verifyRules,
+  runPreCommit,
+} = rules;
 
-function record(intent, skill, frictionCount = 0) {
-  const evolution = loadEvolution();
-  const telemetry = evolution.telemetry;
-  telemetry.requestCount = (telemetry.requestCount || 0) + 1;
+function audit(resetCounters = true, jsonMode = false) {
+  // 0. Audit and repair telemetry schema hygiene
+  const hygiene = auditTelemetryHygiene(true, !jsonMode);
 
-  const normalizedIntent = (intent || 'general').trim().toLowerCase().replace(/\s+/g, '-');
-  if (!telemetry.patterns[normalizedIntent]) {
-    telemetry.patterns[normalizedIntent] = {
-      count: 0,
-      lastSeen: new Date().toISOString(),
-      frictionCount: 0,
-    };
-  }
-  telemetry.patterns[normalizedIntent].count += 1;
-  telemetry.patterns[normalizedIntent].lastSeen = new Date().toISOString();
-  telemetry.patterns[normalizedIntent].frictionCount += Number(frictionCount) || 0;
-
-  if (skill && skill !== 'none') {
-    telemetry.skillUsage[skill] = (telemetry.skillUsage[skill] || 0) + 1;
-  }
-
-  saveEvolution(evolution);
-  console.log(`[OBSERVER] Recorded intent "${normalizedIntent}" (Skill: ${skill || 'none'}). Total req count: ${telemetry.requestCount}`);
-
-  if (Number(frictionCount) >= 2 || telemetry.patterns[normalizedIntent].frictionCount >= 2) {
-    console.log(`\n[JUST-IN-TIME PROACTIVE ALERT] High friction detected for "${normalizedIntent}" (friction: ${telemetry.patterns[normalizedIntent].frictionCount}). Proactively formulate a targeted diff for skill "${skill || 'specification'}" to eliminate friction.\n`);
-  }
-}
-
-function checkThresholds() {
-  const evolution = loadEvolution();
-  const telemetry = evolution.telemetry;
-  const now = Date.now();
-  const last = new Date(telemetry.lastAudit || now).getTime();
-  const diffHours = (now - last) / (1000 * 60 * 60);
-
-  const countThreshold = (telemetry.requestCount || 0) >= 10;
-  const timeThreshold = diffHours >= 2;
-
-  const result = {
-    triggered: countThreshold || timeThreshold,
-    requestCount: telemetry.requestCount || 0,
-    hoursSinceAudit: Number(diffHours.toFixed(2)),
-    reasons: [],
-  };
-
-  if (countThreshold) result.reasons.push('request_count_reached (>= 10)');
-  if (timeThreshold) result.reasons.push('time_interval_reached (>= 2h)');
-
-  console.log(JSON.stringify(result, null, 2));
-  return result;
-}
-
-// 1. Skill Linter & Generalization Audit (Zero Specificity Bias & Quality Guard)
-function auditSkillsQuality() {
-  const missingFeedbackSkills = [];
-  const skillLintIssues = [];
-
-  if (fs.existsSync(skillsDir)) {
-    const skillEntries = fs.readdirSync(skillsDir, { withFileTypes: true });
-    for (const entry of skillEntries) {
-      if (entry.isDirectory()) {
-        const skillFile = path.join(skillsDir, entry.name, 'SKILL.md');
-        if (fs.existsSync(skillFile)) {
-          const skillContent = fs.readFileSync(skillFile, 'utf8');
-          const lines = skillContent.split(/\r?\n/);
-
-          // A. Feedback Loop contract check
-          if (!skillContent.includes('Feedback Loop') && !skillContent.includes('Петля Эволюции Навыка')) {
-            missingFeedbackSkills.push(entry.name);
-          }
-
-          // B. Size / Token Budget check (>350 lines warning)
-          if (lines.length > 350) {
-            skillLintIssues.push(`[${entry.name}] Exceeds token budget (${lines.length} lines > 350 max). Consider compressing.`);
-          }
-
-          // Strip inline backticks and code fences to avoid false positives
-          const contentWithoutCode = skillContent
-            .replace(/```[\s\S]*?```/g, '')
-            .replace(/`[^`\r\n]+`/g, '');
-
-          // C. Absolute path detection
-          if (contentWithoutCode.includes('file:///') || contentWithoutCode.match(/[a-zA-Z]:\\[a-zA-Z0-9_.-]+/)) {
-            skillLintIssues.push(`[${entry.name}] Contains absolute file paths outside code blocks. Use relative paths only.`);
-          }
-
-          // D. Legacy XML tags detection
-          const xmlMatch = contentWithoutCode.match(/<\/?(handoff_context|architecture_map|feature_status)[^>]*>/i);
-          if (xmlMatch) {
-            skillLintIssues.push(`[${entry.name}] Contains legacy XML tags (${xmlMatch[0]}). Format as clean Markdown.`);
-          }
-
-          // E. Zero Specificity Bias
-          for (const pattern of privateDomainPatterns) {
-            if (pattern.test(skillContent)) {
-              skillLintIssues.push(`[${entry.name}] Contains project-specific domain reference (${pattern}). Generalize to architectural layer terms.`);
-            }
-          }
-        } else {
-          missingFeedbackSkills.push(`${entry.name} (missing SKILL.md)`);
-        }
-      }
-    }
-  }
-
-  if (missingFeedbackSkills.length > 0) {
-    console.warn('\n[SKILL AUDIT WARNING] Found skills lacking Feedback Loop mechanism (Zero Orphan Skills):');
-    missingFeedbackSkills.forEach((s) => {
-      console.warn(`  - .agents/skills/${s}/SKILL.md lacks Feedback Loop contract`);
-    });
-    console.warn('Add standard Feedback Loop section to onboard new skills into self-improvement cycle.\n');
-  }
-
-  if (skillLintIssues.length > 0) {
-    console.warn('\n[SKILL LINT WARNING] Found skill quality or specificity issues:');
-    skillLintIssues.forEach((issue) => console.warn(`  - ${issue}`));
-    console.warn('');
-  }
-}
-
-// 2. Troubleshooting Harvester (Anti-Pattern Aggregation)
-function harvestTroubleshooting() {
-  function scanTroubleshootingFiles(dir, list = []) {
-    if (!fs.existsSync(dir)) return list;
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (['node_modules', '.git', 'dist', '.archives', '.tmp'].includes(entry.name)) continue;
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        scanTroubleshootingFiles(full, list);
-      } else if (entry.isFile() && entry.name === 'TROUBLESHOOTING.md') {
-        list.push(full);
-      }
-    }
-    return list;
-  }
-
-  const troubleshootingFiles = scanTroubleshootingFiles(path.join(workspaceRoot, 'src'));
-  const rootTroubleshooting = path.join(workspaceRoot, 'TROUBLESHOOTING.md');
-  if (fs.existsSync(rootTroubleshooting)) troubleshootingFiles.push(rootTroubleshooting);
-
-  if (troubleshootingFiles.length > 0) {
-    let totalIncidents = 0;
-    troubleshootingFiles.forEach((f) => {
-      try {
-        const content = fs.readFileSync(f, 'utf8');
-        const lines = content.split('\n').filter((l) => l.trim().startsWith('- '));
-        totalIncidents += lines.length;
-      } catch (_) {}
-    });
-    if (totalIncidents > 0) {
-      console.log(`[TROUBLESHOOTING HARVEST] Tracked ${totalIncidents} incidents across ${troubleshootingFiles.length} modules. Ensure recurring bugs are generalized into architecture rules.`);
-    }
-  }
-}
-
-// 3. Upstream Sync Health Hint
-function checkUpstreamSync() {
-  const agentsGitDir = path.join(workspaceRoot, '.agents', '.git');
-  if (fs.existsSync(agentsGitDir)) {
-    try {
-      const status = execSync(
-        `git --git-dir="${agentsGitDir}" --work-tree="${path.join(workspaceRoot, '.agents')}" status --porcelain`,
-        { encoding: 'utf8' }
-      ).trim();
-      if (status) {
-        console.log('\n[UPSTREAM SYNC NOTICE] Local skill improvements detected in .agents/. Consider publishing:');
-        console.log('  node .agents/skills/agents/scripts/sync.cjs push "description"\n');
-      }
-    } catch (_) {}
-  }
-}
-
-function audit(resetCounters = true) {
   // 1. Audit skills specification quality and contracts
-  auditSkillsQuality();
+  const skillsQuality = auditSkillsQuality(!jsonMode);
 
-  // 2. Harvest recurring incidents from TROUBLESHOOTING.md
-  harvestTroubleshooting();
+  // 2. Harvest recurring incidents from TROUBLESHOOTING.md & synthesize rules
+  const candidateRules = harvestTroubleshooting(!jsonMode);
+  const ruleRecommendations = [];
 
-  // 3. Check upstream git sync status
+  const projectRulesFile = path.join(workspaceRoot, 'docs', 'project-rules.md');
+  const projectRulesContent = fs.existsSync(projectRulesFile) ? fs.readFileSync(projectRulesFile, 'utf8') : '';
+  const projectRulesSlug = slugify(projectRulesContent);
+
+  for (const rule of candidateRules) {
+    const titleSlug = slugify(rule.title);
+    if (!projectRulesContent.includes(rule.title) && !projectRulesSlug.includes(titleSlug)) {
+      ruleRecommendations.push({
+        type: 'rule',
+        target: rule.title,
+        reason: `Выявлен повторяющийся кластер дефектов (${rule.incidents} инцидентов).`,
+        action: `Добавить правило в docs/project-rules.md: ${rule.proposedRule}`,
+        necessityMet: true,
+        sufficiencyMet: true,
+        proposedRule: rule.proposedRule,
+      });
+    }
+  }
+
+  // 3. Audit aging items in technical debt ledger
+  const debtAudit = auditTechDebt(!jsonMode);
+  const debtRecommendations = debtAudit.recommendations;
+
+  // 4. Verify codebase against synthesized architecture rules
+  const ruleVerification = verifyRules(false);
+  const codeFixRecommendations = [];
+  if (!ruleVerification.passed) {
+    for (const v of ruleVerification.violations) {
+      codeFixRecommendations.push({
+        type: 'fix-code',
+        target: v.file,
+        reason: `Нарушение архитектурного правила [${v.rule}]: line ${v.line}`,
+        action: v.message,
+        necessityMet: true,
+        sufficiencyMet: true,
+      });
+    }
+  }
+
+  // 5. Check upstream git sync status
   checkUpstreamSync();
 
-  // 4. Analyze request telemetry and thresholds
+  // 6. Analyze request telemetry and thresholds
   const evolution = loadEvolution();
-  const telemetry = evolution.telemetry;
-  const recommendations = [];
+  const currentTelemetry = evolution.telemetry;
+  const recommendations = [...debtRecommendations, ...ruleRecommendations, ...codeFixRecommendations];
 
   const existingSkills = fs.existsSync(skillsDir)
     ? fs.readdirSync(skillsDir).filter((f) => fs.statSync(path.join(skillsDir, f)).isDirectory())
     : [];
 
   // Criteria: Creation
-  for (const [intent, stat] of Object.entries(telemetry.patterns || {})) {
-    const matchesSkill = existingSkills.some((s) => s.toLowerCase() === intent);
+  for (const [intent, stat] of Object.entries(currentTelemetry.patterns || {})) {
+    const baseIntent = intent.split(':')[0];
+    const mappedSkill = domainCoverageMatrix[baseIntent] || domainCoverageMatrix[intent];
+    const matchesSkill = existingSkills.some(
+      (s) => s.toLowerCase() === intent || s.toLowerCase() === baseIntent || (mappedSkill && s.toLowerCase() === mappedSkill)
+    );
     if (!matchesSkill && stat.count >= 3) {
       recommendations.push({
         type: 'create',
         target: intent,
         reason: `Повторяющийся паттерн req (${stat.count} вызовов) без покрытия навыком.`,
+        action: `node .agents/skills/observer/scripts/observer.cjs --scaffold ${baseIntent}`,
         necessityMet: true,
         sufficiencyMet: true,
       });
@@ -271,12 +135,28 @@ function audit(resetCounters = true) {
   }
 
   // Criteria: Modification
-  for (const [intent, stat] of Object.entries(telemetry.patterns || {})) {
+  for (const [intent, stat] of Object.entries(currentTelemetry.patterns || {})) {
     if (stat.frictionCount >= 2) {
+      const baseIntent = intent.split(':')[0];
+      const targetSkill = domainCoverageMatrix[baseIntent] || baseIntent;
       recommendations.push({
         type: 'modify',
-        target: intent,
-        reason: `Зафиксированы системные трения/правки пользователя (${stat.frictionCount} раз).`,
+        target: targetSkill,
+        reason: `Зафиксированы системные трения/правки пользователя (${stat.frictionCount} раз) в паттерне ${intent}.`,
+        action: `Обновить спецификацию .agents/skills/${targetSkill}/SKILL.md через /learn`,
+        necessityMet: true,
+        sufficiencyMet: true,
+      });
+    }
+  }
+
+  for (const [skill, fCount] of Object.entries(currentTelemetry.skillFriction || {})) {
+    if (fCount >= 2 && !recommendations.some((r) => r.type === 'modify' && r.target === skill)) {
+      recommendations.push({
+        type: 'modify',
+        target: skill,
+        reason: `Зафиксированы суммарные трения по навыку (${fCount} раз). Рекомендуется обновление спецификации /learn.`,
+        action: `Обновить спецификацию .agents/skills/${skill}/SKILL.md через /learn`,
         necessityMet: true,
         sufficiencyMet: true,
       });
@@ -284,14 +164,28 @@ function audit(resetCounters = true) {
   }
 
   // Criteria: Deletion / Archival
-  const totalCalls = Object.values(telemetry.skillUsage || {}).reduce((a, b) => a + b, 0);
+  const branchSkills = getBranchConfigSkills();
+  const totalCalls = Object.values(currentTelemetry.skillUsage || {}).reduce((a, b) => a + b, 0);
   if (totalCalls >= 15) {
     for (const skill of existingSkills) {
-      if (!telemetry.skillUsage[skill] || telemetry.skillUsage[skill] === 0) {
+      if (archivedSkills.includes(skill) || branchSkills.includes(skill)) continue;
+      const meta = getSkillMetadata(skill);
+      if (meta.type === 'declarative' || meta.type === 'orchestrator' || meta.type === 'core') continue;
+
+      // Grace period for newly onboarded skills (48h grace period)
+      const skillPath = path.join(skillsDir, skill);
+      if (fs.existsSync(skillPath)) {
+        const ctime = fs.statSync(skillPath).ctimeMs;
+        const ageHours = (Date.now() - ctime) / (1000 * 60 * 60);
+        if (ageHours < 48) continue;
+      }
+
+      if (!currentTelemetry.skillUsage[skill] || currentTelemetry.skillUsage[skill] === 0) {
         recommendations.push({
           type: 'delete',
           target: skill,
           reason: `Навык не вызывался за период (${totalCalls} суммарных вызовов). Рекомендуется аудит на удаление/архивацию.`,
+          action: `Архивировать в .archives/${skill} и удалить из .agents/skills/${skill}`,
           necessityMet: true,
           sufficiencyMet: false,
         });
@@ -300,9 +194,26 @@ function audit(resetCounters = true) {
   }
 
   if (resetCounters) {
-    telemetry.lastAudit = new Date().toISOString();
-    telemetry.requestCount = 0;
+    currentTelemetry.lastAudit = new Date().toISOString();
+    currentTelemetry.requestCount = 0;
+    currentTelemetry.auditRequired = false;
+    currentTelemetry.lastIncident = null;
     saveEvolution(evolution);
+  }
+
+  if (jsonMode) {
+    const jsonOutput = {
+      timestamp: new Date().toISOString(),
+      healthy: hygiene.healthy,
+      hygieneIssues: hygiene.issues,
+      skillsQuality,
+      candidateRules,
+      debtRecommendations: debtRecommendations.map((d) => d.debtMeta).filter(Boolean),
+      ruleVerification,
+      recommendations,
+    };
+    console.log(JSON.stringify(jsonOutput, null, 2));
+    return jsonOutput;
   }
 
   console.log('[OBSERVER AUDIT] Результаты анализа непрерывного улучшения:');
@@ -310,40 +221,75 @@ function audit(resetCounters = true) {
     console.log('- Нет активных рекомендаций по изменению, созданию или удалению навыков.');
   } else {
     for (const rec of recommendations) {
-      console.log(`- [${rec.type.toUpperCase()}] ${rec.target} → ${rec.reason}`);
+      const actionText = rec.action ? ` [Action: ${rec.action}]` : '';
+      console.log(`- [${rec.type.toUpperCase()}] ${rec.target} → ${rec.reason}${actionText}`);
     }
   }
 
   return recommendations;
 }
 
-function logHistory(scope, trigger, improvement) {
-  if (!scope || !trigger || !improvement) {
-    console.error('[OBSERVER ERROR] Использование: node observer.cjs --log-history <scope> <trigger> <improvement>');
-    process.exit(1);
-  }
+function generateReport(outputPath) {
   const evolution = loadEvolution();
-  const today = new Date().toISOString().split('T')[0];
-  evolution.history.push({
-    date: today,
-    scope,
-    trigger,
-    improvement,
-  });
-  saveEvolution(evolution);
-  console.log(`[EVOLUTION LEDGER] Recorded: - [${today}] [${scope}] → [${trigger}] → [${improvement}]`);
-}
+  const vRes = verifyRules(false);
+  const candRules = harvestTroubleshooting(false);
+  const debtAudit = auditTechDebt(false);
+  const debtRecs = debtAudit.recommendations;
+  const skillsQual = auditSkillsQuality(false);
+  const hygiene = auditTelemetryHygiene(false, false);
 
-function printHistory() {
-  const evolution = loadEvolution();
-  console.log('# Agent Skills Evolution Ledger (evolution.json)\n');
-  if (!evolution.history || evolution.history.length === 0) {
-    console.log('No history records found.');
-    return;
+  const lines = [
+    `# 📊 Observer Architecture & Evolution Quality Report`,
+    `Generated at: ${new Date().toISOString()}`,
+    ``,
+    `## 1. Schema & Telemetry Health`,
+    `- Status: ${hygiene.healthy ? '✅ HEALTHY' : '⚠️ ANOMALIES DETECTED'}`,
+    `- Total Requests: ${evolution.telemetry?.requestCount || 0}`,
+    `- Tracked Patterns: ${Object.keys(evolution.telemetry?.patterns || {}).length}`,
+    ``,
+    `## 2. Codebase Synthesized Rule Verification`,
+    `- Status: ${vRes.passed ? '✅ 0 VIOLATIONS' : `❌ ${vRes.violations.length} VIOLATION(S)`}`,
+  ];
+
+  if (vRes.violations.length > 0) {
+    lines.push(``, `### Violations:`);
+    vRes.violations.forEach((v) => {
+      lines.push(`- **${v.rule}**: \`${v.file}:${v.line}\` → ${v.message}`);
+    });
   }
-  for (const item of evolution.history) {
-    console.log(`- [${item.date}] [${item.scope}] → [${item.trigger}] → [${item.improvement}]`);
+
+  lines.push(``, `## 3. Aging Technical Debt (>= 7 days)`);
+  if (debtRecs.length === 0) {
+    lines.push(`- No aging technical debt.`);
+  } else {
+    debtRecs.forEach((d) => {
+      const meta = d.debtMeta || {};
+      lines.push(`- [ ] **[${meta.scope || d.target}]** (${meta.ageDays}d old): ${meta.issue || d.reason} → \`${meta.remediation || d.action}\``);
+    });
   }
+
+  lines.push(``, `## 4. Synthesized Rule Candidates`);
+  if (candRules.length === 0) {
+    lines.push(`- 0 candidates pending.`);
+  } else {
+    candRules.forEach((c) => {
+      lines.push(`- **${c.title}** (${c.incidents} incidents): ${c.proposedRule}`);
+    });
+  }
+
+  lines.push(``, `## 5. Skills Quality & Contracts`);
+  if (skillsQual.missingFeedbackSkills.length === 0 && skillsQual.skillLintIssues.length === 0) {
+    lines.push(`- All skills comply with Feedback Loop and size/specificity rules.`);
+  } else {
+    skillsQual.missingFeedbackSkills.forEach((s) => lines.push(`- ⚠️ Missing Feedback Loop: \`${s}\``));
+    skillsQual.skillLintIssues.forEach((issue) => lines.push(`- ⚠️ Lint: ${issue}`));
+  }
+
+  const reportContent = lines.join('\n') + '\n';
+  const target = outputPath || path.join(workspaceRoot, 'OBSERVER_REPORT.md');
+  fs.writeFileSync(target, reportContent, 'utf8');
+  console.log(`[OBSERVER REPORT] Generated report at: ${path.relative(workspaceRoot, target)}`);
+  return reportContent;
 }
 
 function scaffold(skillName) {
@@ -351,21 +297,25 @@ function scaffold(skillName) {
     console.error('[OBSERVER ERROR] Укажите имя навыка: node observer.cjs --scaffold [name]');
     process.exit(1);
   }
-  const targetDir = path.join(skillsDir, skillName.toLowerCase());
+  const cleanName = skillName.toLowerCase();
+  const targetDir = path.join(skillsDir, cleanName);
   const skillFile = path.join(targetDir, 'SKILL.md');
+  const scriptsSubdir = path.join(targetDir, 'scripts');
+  const scriptFile = path.join(scriptsSubdir, `${cleanName}.cjs`);
 
   if (fs.existsSync(skillFile)) {
     console.log(`[TELEMETRY] Навык ${skillName} уже существует: ${skillFile}`);
     return;
   }
 
-  fs.mkdirSync(targetDir, { recursive: true });
+  fs.mkdirSync(scriptsSubdir, { recursive: true });
 
   const content = `---
-name: ${skillName.toLowerCase()}
+name: ${cleanName}
+type: procedural
 description: >
-  Навык ${skillName.toLowerCase()} для выполнения специализированных задач.
-  Триггеры: /${skillName.toLowerCase()}, "${skillName.toLowerCase()}".
+  Навык ${cleanName} для выполнения специализированных задач.
+  Триггеры: /${cleanName}, "${cleanName}".
 ---
 
 # Навык ${skillName}
@@ -376,60 +326,176 @@ description: >
 
 ## 🔑 Ключевые Принципы
 
-1. **Принцип 1**: Четкие контракты вход/выход.
-2. **Zero Dead Code**: Очистка неиспользуемого кода после завершения.
+1. **Контракты Вход/Выход**: Четкая валидация входных данных и строгий типизированный вывод.
+2. **Zero Dead Code**: Удаление неиспользуемых временных сущностей и остаточных файлов после завершения.
 
 ---
 
 ## 📋 Порядок Выполнения
 
-1. **Анализ задачи**: входные данные и контекст.
-2. **Реализация**: выполнение детерминированных шагов.
-3. **Валидация**: проверка работоспособности.
+1. **Анализ задачи**: валидация входных данных и контекста.
+2. **Исполнение**: вызов скрипта \`node .agents/skills/${cleanName}/scripts/${cleanName}.cjs\`.
+3. **Верификация**: проверка отсутствия регрессий и соблюдения правил.
 4. **Петля Эволюции Навыка (Feedback Loop)**:
    - Анализ концептуальных сдвигов: проверить, затронуло ли выполнение базовые принципы навыка.
    - При выявлении новых паттернов или правок пользователя → предложить актуализацию спецификации (\`/learn\` или подтверждение в чате).
 `;
 
+  const scriptContent = `#!/usr/bin/env node
+
+/**
+ * CLI script for /${cleanName} skill
+ */
+
+const path = require('path');
+
+function main() {
+  const args = process.argv.slice(2);
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: node ${cleanName}.cjs [options]');
+    process.exit(0);
+  }
+  console.log('[${cleanName.toUpperCase()}] Execution completed successfully.');
+}
+
+if (require.main === module) {
+  main();
+}
+`;
+
   fs.writeFileSync(skillFile, content, 'utf8');
-  console.log(`[TELEMETRY] Каркас навыка создан: ${path.relative(workspaceRoot, skillFile)}`);
+  fs.writeFileSync(scriptFile, scriptContent, 'utf8');
+  console.log(`[TELEMETRY] Каркас навыка создан: ${path.relative(workspaceRoot, skillFile)} и ${path.relative(workspaceRoot, scriptFile)}`);
 }
 
-// CLI args parsing
-const args = process.argv.slice(2);
-const command = args[0];
+function runCli() {
+  const args = process.argv.slice(2);
+  const isJson = args.includes('--json');
+  const isStrict = args.includes('--strict');
+  const cleanArgs = args.filter((a) => a !== '--json' && a !== '--strict');
+  const command = cleanArgs[0];
 
-if (!command || command === '--help' || command === '-h') {
-  console.log(`Использование:
-  node observer.cjs --record <intent> [skill] [friction]
-  node observer.cjs --check-thresholds
-  node observer.cjs --audit
-  node observer.cjs --history
-  node observer.cjs --log-history <scope> <trigger> <improvement>
-  node observer.cjs --scaffold <skill-name>`);
-  process.exit(0);
+  if (!command || command === '--help' || command === '-h') {
+    console.log(`Использование:
+    node observer.cjs --record <intent> [skill] [friction] [frictionType]
+    node observer.cjs --check-thresholds
+    node observer.cjs --audit [--json] [--strict]
+    node observer.cjs --verify-rules [--json]
+    node observer.cjs --incident [--json]
+    node observer.cjs --history [--json]
+    node observer.cjs --clean-telemetry [--json]
+    node observer.cjs --prune-telemetry [days] [--json]
+    node observer.cjs --pre-commit [--json]
+    node observer.cjs --report [outputPath]
+    node observer.cjs --log-history <scope> <trigger> <improvement>
+    node observer.cjs --scaffold <skill-name>`);
+    process.exit(0);
+  }
+
+  switch (command) {
+    case '--record':
+      record(cleanArgs[1], cleanArgs[2], cleanArgs[3], cleanArgs[4]);
+      break;
+    case '--check-thresholds':
+      checkThresholds();
+      break;
+    case '--audit':
+      const aRes = audit(true, isJson);
+      if (isStrict) {
+        const hasViolations = aRes.recommendations && aRes.recommendations.some((r) => r.type === 'fix-code');
+        const isUnhealthy = aRes.healthy === false;
+        if (hasViolations || isUnhealthy) process.exit(1);
+      }
+      break;
+    case '--verify-rules':
+      const vRes = verifyRules(!isJson);
+      if (isJson) console.log(JSON.stringify(vRes, null, 2));
+      if (!vRes.passed) process.exit(1);
+      break;
+    case '--incident':
+      printLastIncident(isJson);
+      break;
+    case '--history':
+      if (isJson) {
+        const evolution = loadEvolution();
+        console.log(JSON.stringify(evolution.history || [], null, 2));
+      } else {
+        printHistory();
+      }
+      break;
+    case '--clean-telemetry':
+      const cRes = cleanTelemetry(!isJson);
+      if (isJson) console.log(JSON.stringify(cRes, null, 2));
+      break;
+    case '--prune-telemetry':
+      const pRes = pruneTelemetry(cleanArgs[1] || 90, !isJson);
+      if (isJson) console.log(JSON.stringify(pRes, null, 2));
+      break;
+    case '--pre-commit':
+      runPreCommit(isJson);
+      break;
+    case '--report':
+      generateReport(cleanArgs[1]);
+      break;
+    case '--log-history':
+      logHistory(cleanArgs[1], cleanArgs[2], cleanArgs[3]);
+      break;
+    case '--scaffold':
+      scaffold(cleanArgs[1]);
+      break;
+    default:
+      console.error(`Неизвестная команда: ${command}`);
+      process.exit(1);
+  }
 }
 
-switch (command) {
-  case '--record':
-    record(args[1], args[2], args[3]);
-    break;
-  case '--check-thresholds':
-    checkThresholds();
-    break;
-  case '--audit':
-    audit(true);
-    break;
-  case '--history':
-    printHistory();
-    break;
-  case '--log-history':
-    logHistory(args[1], args[2], args[3]);
-    break;
-  case '--scaffold':
-    scaffold(args[1]);
-    break;
-  default:
-    console.error(`Неизвестная команда: ${command}`);
-    process.exit(1);
+if (require.main === module) {
+  runCli();
 }
+
+module.exports = {
+  // Telemetry
+  agentsDir,
+  workspaceRoot,
+  evolutionFile,
+  skillsDir,
+  configFile,
+  DEFAULT_CONFIG,
+  loadObserverConfig,
+  skillAliases,
+  domainCoverageMatrix,
+  archivedSkills,
+  getKnownSkills,
+  resolveValidSkill,
+  getSkillMetadata,
+  getBranchConfigSkills,
+  categorizeIntent,
+  atomicWriteJson,
+  loadEvolution,
+  saveEvolution,
+  checkAutoResolveIncident,
+  record,
+  checkThresholds,
+  printLastIncident,
+  cleanTelemetry,
+  pruneTelemetry,
+  auditTelemetryHygiene,
+  logHistory,
+  printHistory,
+  // Harvester
+  privateDomainPatterns,
+  slugify,
+  auditSkillsQuality,
+  harvestTroubleshooting,
+  auditTechDebt,
+  checkUpstreamSync,
+  // Rules
+  scanHooksOrder,
+  scanRawDtoInUi,
+  verifyRules,
+  runPreCommit,
+  // Coordinator
+  audit,
+  generateReport,
+  scaffold,
+};

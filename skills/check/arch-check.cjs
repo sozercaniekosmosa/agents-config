@@ -460,6 +460,25 @@ if (deadFiles.length > 0) {
   hasErrors = true;
 }
 
+// 6. Synthesized Architecture Rule Verification (Rules of Hooks & ACL DTO checks)
+const observerScript = path.join(workspaceRoot, '.agents', 'skills', 'observer', 'scripts', 'observer.cjs');
+if (fs.existsSync(observerScript)) {
+  try {
+    const observer = require(observerScript);
+    if (typeof observer.verifyRules === 'function') {
+      const ruleResult = observer.verifyRules(false);
+      if (!ruleResult.passed) {
+        console.error('\n[SYNTHESIZED RULE ERROR] Violations detected against project architecture rules:');
+        ruleResult.violations.forEach(v => {
+          console.error(`  - [${v.rule}] ${v.file}:${v.line} → ${v.message}`);
+        });
+        hasErrors = true;
+      }
+    }
+  } catch (_) {}
+}
+
+
 if (hasErrors) {
   process.exit(1);
 } else {
