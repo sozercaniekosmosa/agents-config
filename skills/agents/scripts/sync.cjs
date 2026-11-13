@@ -71,7 +71,8 @@ function ensureAgentGitignore() {
     'skills/debug/.logs/',
     '**/.logs/',
     '**/storage/*.json',
-    '*.patch'
+    '*.patch',
+    'plugins/'
   ];
   let content = fs.existsSync(agentGitignore) ? fs.readFileSync(agentGitignore, 'utf-8') : '';
   let updated = false;
