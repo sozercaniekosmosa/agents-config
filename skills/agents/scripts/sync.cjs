@@ -1,20 +1,32 @@
 /**
- * Isolated Git Sync script for central .agents repository (sozercaniekosmosa/agents-config)
+ * Isolated Git Sync script for the central .agents repository (sozercaniekosmosa/agents-config).
  * Supports multi-project branch management and 2-stage sync:
  * 1. Common skills & AGENTS.md (main branch)
  * 2. Project-specific skills (project branch)
  */
 
-const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { createGitRunner, runCommand } = require('./lib/exec-runner.cjs');
+const { createProjectProfile } = require('./lib/project-profile.cjs');
 
 const REPO_URL = 'https://github.com/sozercaniekosmosa/agents-config.git';
 const AGENTS_DIR = path.resolve(__dirname, '../../..');
 const PROJECT_ROOT = path.resolve(AGENTS_DIR, '..');
 const PARENT_GITIGNORE = path.join(PROJECT_ROOT, '.gitignore');
 const CACHE_DIR = path.join(AGENTS_DIR, '.cache');
-const PROJECT_CONFIG_FILE = path.join(CACHE_DIR, 'project.json');
+
+const { runGit, makeWorktreeGit } = createGitRunner({ agentsDir: AGENTS_DIR, captureDir: CACHE_DIR });
+const {
+  getAvailableSkills,
+  getUnclassifiedSkills,
+  getProjectConfig,
+  setProjectConfig,
+  classifySkill,
+  resetProjectConfig,
+  getRemoteBranches,
+  getCurrentBranch
+} = createProjectProfile({ agentsDir: AGENTS_DIR, cacheDir: CACHE_DIR, runGit });
 
 function ensureParentGitignore() {
   if (!fs.existsSync(PROJECT_ROOT)) return;
@@ -31,33 +43,11 @@ function ensureParentGitignore() {
   }
 }
 
-function runGit(args, options = {}) {
-  const gitDir = path.join(AGENTS_DIR, '.git');
-  const cmd = `git --git-dir="${gitDir}" --work-tree="${AGENTS_DIR}" ${args}`;
-  const env = {
-    ...process.env,
-    GIT_AUTHOR_NAME: 'sozercaniekosmosa',
-    GIT_AUTHOR_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
-    GIT_COMMITTER_NAME: 'sozercaniekosmosa',
-    GIT_COMMITTER_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
-    ...(options.env || {})
-  };
-  try {
-    return execSync(cmd, { encoding: 'utf-8', cwd: AGENTS_DIR, ...options, env });
-  } catch (err) {
-    if (options.silent) throw err;
-    console.error(`[sync err] ${err.message}`);
-    if (err.stdout) console.log(err.stdout);
-    if (err.stderr) console.error(err.stderr);
-    throw err;
-  }
-}
-
 function initGitIfNeeded() {
   const gitDir = path.join(AGENTS_DIR, '.git');
   if (!fs.existsSync(gitDir)) {
     console.log('[sync] Initializing git repo in .agents...');
-    execSync(`git init "${AGENTS_DIR}"`, { encoding: 'utf-8' });
+    runCommand(`git init "${AGENTS_DIR}"`, { cwd: AGENTS_DIR, captureDir: CACHE_DIR });
     runGit(`remote add origin ${REPO_URL}`);
     runGit('branch -M main');
   }
@@ -88,156 +78,8 @@ function ensureAgentGitignore() {
   }
 }
 
-function getRemoteCommonSkills() {
-  try {
-    const raw = runGit('ls-tree --name-only origin/main skills/', { silent: true });
-    return raw
-      .trim()
-      .split('\n')
-      .map(line => line.replace(/^skills\//, '').trim())
-      .filter(Boolean)
-      .map(name => (name === 'initialization' ? 'agents' : name));
-  } catch {
-    return ['check', 'debug', 'explorer', 'guide', 'observer', 'resolve', 'short', 'agents'];
-  }
-}
-
-function getUnclassifiedSkills(config) {
-  if (!config) return [];
-  const allSkills = getAvailableSkills();
-  const projectSkills = config.projectSkills || [];
-  let commonSkills = config.commonSkills;
-  if (!Array.isArray(commonSkills)) {
-    commonSkills = getRemoteCommonSkills();
-  }
-  const known = new Set([...projectSkills, ...commonSkills]);
-  return allSkills.filter(s => !known.has(s));
-}
-
-function getProjectConfig() {
-  if (fs.existsSync(PROJECT_CONFIG_FILE)) {
-    try {
-      const config = JSON.parse(fs.readFileSync(PROJECT_CONFIG_FILE, 'utf-8'));
-      config.unclassifiedSkills = getUnclassifiedSkills(config);
-      return config;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
-
-function setProjectConfig(branch, skills = [], commonSkills = null) {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
-  }
-  const allSkills = getAvailableSkills();
-  const projSkills = Array.isArray(skills) ? skills : [skills].filter(Boolean);
-  const commSkills = commonSkills !== null
-    ? (Array.isArray(commonSkills) ? commonSkills : [commonSkills].filter(Boolean))
-    : allSkills.filter(s => !projSkills.includes(s));
-
-  const config = {
-    projectBranch: branch,
-    projectSkills: projSkills.sort(),
-    commonSkills: commSkills.sort(),
-    updatedAt: new Date().toISOString()
-  };
-  fs.writeFileSync(PROJECT_CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
-  config.unclassifiedSkills = getUnclassifiedSkills(config);
-  return config;
-}
-
-function classifySkill(skill, type) {
-  const config = getProjectConfig();
-  if (!config || !config.projectBranch) {
-    console.error('[sync] Error: Project profile not set. Run "sync.cjs project-set <branch> [skills...]" first.');
-    process.exit(1);
-  }
-  const allSkills = getAvailableSkills();
-  if (!allSkills.includes(skill)) {
-    console.error(`[sync] Error: Skill "${skill}" does not exist in .agents/skills/`);
-    process.exit(1);
-  }
-
-  let projectSkills = new Set(config.projectSkills || []);
-  let commonSkills = new Set(Array.isArray(config.commonSkills) ? config.commonSkills : getRemoteCommonSkills());
-
-  if (type === 'project') {
-    projectSkills.add(skill);
-    commonSkills.delete(skill);
-  } else if (type === 'common') {
-    commonSkills.add(skill);
-    projectSkills.delete(skill);
-  } else {
-    console.error(`[sync] Error: Type must be "common" or "project", got "${type}"`);
-    process.exit(1);
-  }
-
-  config.projectSkills = Array.from(projectSkills).sort();
-  config.commonSkills = Array.from(commonSkills).sort();
-  config.updatedAt = new Date().toISOString();
-
-  fs.writeFileSync(PROJECT_CONFIG_FILE, JSON.stringify({
-    projectBranch: config.projectBranch,
-    projectSkills: config.projectSkills,
-    commonSkills: config.commonSkills,
-    updatedAt: config.updatedAt
-  }, null, 2), 'utf-8');
-
-  config.unclassifiedSkills = getUnclassifiedSkills(config);
-  return config;
-}
-
-function resetProjectConfig() {
-  if (fs.existsSync(PROJECT_CONFIG_FILE)) {
-    fs.unlinkSync(PROJECT_CONFIG_FILE);
-    return true;
-  }
-  return false;
-}
-
-function getRemoteBranches() {
-  try {
-    const raw = runGit('ls-remote --heads origin', { silent: true });
-    const branches = [];
-    const lines = raw.trim().split('\n');
-    for (const line of lines) {
-      if (!line) continue;
-      const parts = line.trim().split(/\s+/);
-      if (parts[1] && parts[1].startsWith('refs/heads/')) {
-        const branch = parts[1].replace('refs/heads/', '');
-        if (branch !== 'main') {
-          branches.push(branch);
-        }
-      }
-    }
-    return branches;
-  } catch {
-    return [];
-  }
-}
-
-function getAvailableSkills() {
-  const skillsDir = path.join(AGENTS_DIR, 'skills');
-  if (!fs.existsSync(skillsDir)) return [];
-  return fs.readdirSync(skillsDir).filter(name => {
-    const full = path.join(skillsDir, name);
-    return fs.statSync(full).isDirectory();
-  });
-}
-
-function getCurrentBranch() {
-  try {
-    return runGit('branch --show-current', { silent: true }).trim();
-  } catch {
-    return '';
-  }
-}
-
 function ensureBranch(branch) {
-  const current = getCurrentBranch();
-  if (current === branch) return;
+  if (getCurrentBranch() === branch) return;
 
   // Check if branch exists locally
   try {
@@ -265,20 +107,22 @@ function ensureBranch(branch) {
 
 function runArchCheck() {
   const archCheckScript = path.join(AGENTS_DIR, 'skills/check/arch-check.cjs');
-  if (fs.existsSync(archCheckScript)) {
-    try {
-      execSync(`node "${archCheckScript}"`, { cwd: AGENTS_DIR, stdio: 'pipe' });
-    } catch (err) {
-      const isForce = process.argv.includes('--force') || process.argv.includes('-f') || process.argv.includes('--no-verify');
-      if (isForce) {
-        console.warn('[sync Quality Gate warning] arch-check.cjs detected host project issues. Continuing with push (--no-verify).');
-      } else {
-        console.error('[sync Quality Gate] arch-check.cjs failed! Aborting push (use --no-verify to bypass host project issues).');
-        if (err.stdout) console.log(err.stdout.toString());
-        if (err.stderr) console.error(err.stderr.toString());
-        process.exit(1);
-      }
+  if (!fs.existsSync(archCheckScript)) return;
+  try {
+    runCommand(`node "${archCheckScript}"`, { cwd: AGENTS_DIR, captureDir: CACHE_DIR });
+  } catch (err) {
+    const isForce = process.env.SYNC_NO_VERIFY === '1'
+      || process.argv.includes('--force')
+      || process.argv.includes('-f')
+      || process.argv.includes('--no-verify');
+    if (isForce) {
+      console.warn('[sync Quality Gate warning] arch-check.cjs detected host project issues. Continuing with push (--no-verify).');
+      return;
     }
+    console.error('[sync Quality Gate] arch-check.cjs failed! Aborting push (use --no-verify to bypass host project issues).');
+    if (err.stdout) console.log(err.stdout.toString());
+    if (err.stderr) console.error(err.stderr.toString());
+    process.exit(1);
   }
 }
 
@@ -315,7 +159,7 @@ function executePull() {
   try {
     runGit(`fetch origin ${projectBranch}`, { silent: true });
     runGit(`merge origin/${projectBranch} --no-edit -X no-renames`, { silent: true });
-    console.log(`[sync] Stage 2 (Project): Updated successfully!`);
+    console.log('[sync] Stage 2 (Project): Updated successfully!');
   } catch {
     console.log(`[sync] Remote branch origin/${projectBranch} not found on origin or already up to date.`);
   }
@@ -346,8 +190,7 @@ function executePush(message) {
   ensureBranch(projectBranch);
 
   // 1. Commit uncommitted changes on project branch if any
-  const statusRaw = runGit('status --porcelain', { silent: true }).trim();
-  if (statusRaw) {
+  if (runGit('status --porcelain', { silent: true }).trim()) {
     runGit('add .');
     runGit(`commit -m "[${projectBranch}] ${message}"`);
     console.log(`[sync] Committed uncommitted changes on ${projectBranch}.`);
@@ -365,24 +208,12 @@ function executePush(message) {
     }
 
     if (projectSkills.length === 0) {
-      // All skills are common! Check if projectBranch has commits ahead of origin/main
+      // All skills are common: merge the project branch into a detached main worktree.
       const aheadCount = parseInt(runGit(`rev-list --count origin/main..${projectBranch}`, { silent: true }).trim(), 10) || 0;
       if (aheadCount > 0) {
         console.log(`[sync] ${projectBranch} has ${aheadCount} commit(s) ahead of origin/main (all skills common). Syncing to main...`);
         runGit(`worktree add --detach "${tempWorktree}" origin/main`);
-        const wtGit = (args) => {
-          return execSync(`git ${args}`, {
-            encoding: 'utf-8',
-            cwd: tempWorktree,
-            env: {
-              ...process.env,
-              GIT_AUTHOR_NAME: 'sozercaniekosmosa',
-              GIT_AUTHOR_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
-              GIT_COMMITTER_NAME: 'sozercaniekosmosa',
-              GIT_COMMITTER_EMAIL: 'sozercaniekosmosa@users.noreply.github.com'
-            }
-          });
-        };
+        const wtGit = makeWorktreeGit(tempWorktree);
         wtGit(`merge ${projectBranch} -m "[common] ${message}"`);
         wtGit('push origin HEAD:main');
         try {
@@ -394,11 +225,11 @@ function executePush(message) {
         console.log('[sync] Stage 1 (Common): origin/main is already up to date with common changes.');
       }
     } else {
-      // Project has specific skills -> find common files that differ between origin/main and projectBranch
+      // Project-specific skills exist: copy only common files that differ from origin/main.
       const diffFilesRaw = runGit(`diff --name-only origin/main...${projectBranch}`, { silent: true }).trim();
       const allChangedFiles = diffFilesRaw ? diffFilesRaw.split('\n').filter(Boolean) : [];
-      const commonChanged = allChangedFiles.filter(file => {
-        return !projectSkills.some(skill => file.startsWith(`skills/${skill}/`) || file === `skills/${skill}`);
+      const commonChanged = allChangedFiles.filter((file) => {
+        return !projectSkills.some((skill) => file.startsWith(`skills/${skill}/`) || file === `skills/${skill}`);
       });
 
       if (commonChanged.length > 0) {
@@ -416,23 +247,9 @@ function executePush(message) {
           }
         }
 
-        const wtGit = (args) => {
-          return execSync(`git ${args}`, {
-            encoding: 'utf-8',
-            cwd: tempWorktree,
-            env: {
-              ...process.env,
-              GIT_AUTHOR_NAME: 'sozercaniekosmosa',
-              GIT_AUTHOR_EMAIL: 'sozercaniekosmosa@users.noreply.github.com',
-              GIT_COMMITTER_NAME: 'sozercaniekosmosa',
-              GIT_COMMITTER_EMAIL: 'sozercaniekosmosa@users.noreply.github.com'
-            }
-          });
-        };
-
+        const wtGit = makeWorktreeGit(tempWorktree);
         wtGit('add .');
-        const wtStatus = wtGit('status --porcelain').trim();
-        if (wtStatus) {
+        if (wtGit('status --porcelain').trim()) {
           wtGit(`commit -m "[common] ${message}"`);
           wtGit('push origin HEAD:main');
           try {
@@ -475,29 +292,19 @@ initGitIfNeeded();
 const action = process.argv[2] || 'status';
 
 if (action === 'branches') {
-  const branches = getRemoteBranches();
-  console.log(JSON.stringify(branches));
+  console.log(JSON.stringify(getRemoteBranches()));
 } else if (action === 'skills') {
-  const skills = getAvailableSkills();
-  console.log(JSON.stringify(skills));
+  console.log(JSON.stringify(getAvailableSkills()));
 } else if (action === 'project-get') {
   const config = getProjectConfig();
-  if (config) {
-    console.log(JSON.stringify(config));
-  } else {
-    console.log(JSON.stringify({ error: 'NOT_CONFIGURED' }));
-  }
+  console.log(JSON.stringify(config || { error: 'NOT_CONFIGURED' }));
 } else if (action === 'project-set') {
   const branch = process.argv[3];
   if (!branch) {
     console.error('[sync] Error: Branch name is required. Usage: project-set <branch> [skill1,skill2,...]');
     process.exit(1);
   }
-  const skillsRaw = process.argv.slice(4).join(',');
-  const skills = skillsRaw
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean);
+  const skills = process.argv.slice(4).join(',').split(',').map((s) => s.trim()).filter(Boolean);
   const config = setProjectConfig(branch, skills);
   ensureBranch(branch);
   console.log(`[sync] Project set: branch "${branch}", skills: [${config.projectSkills.join(', ')}]`);
@@ -506,9 +313,7 @@ if (action === 'branches') {
   resetProjectConfig();
   console.log('[sync] Project profile reset.');
 } else if (action === 'unclassified') {
-  const config = getProjectConfig();
-  const unclassified = getUnclassifiedSkills(config);
-  console.log(JSON.stringify(unclassified));
+  console.log(JSON.stringify(getUnclassifiedSkills(getProjectConfig())));
 } else if (action === 'classify') {
   const skill = process.argv[3];
   const type = process.argv[4];
@@ -522,8 +327,7 @@ if (action === 'branches') {
 } else if (action === 'pull') {
   executePull();
 } else if (action === 'push') {
-  const message = process.argv.slice(3).join(' ') || 'Update agent config & skills';
-  executePush(message);
+  executePush(process.argv.slice(3).join(' ') || 'Update agent config & skills');
 } else if (action === 'status') {
   const config = getProjectConfig();
   const currentBranch = getCurrentBranch();
@@ -542,14 +346,8 @@ if (action === 'branches') {
     console.log('Saved project: None (not configured).');
   }
   const status = runGit('status --short');
-  if (status && status.trim()) {
-    console.log(status.trim());
-  } else {
-    console.log('Clean. Local .agents working tree has no uncommitted changes.');
-  }
+  console.log(status && status.trim() ? status.trim() : 'Clean. Local .agents working tree has no uncommitted changes.');
 } else {
   console.error('[sync] Unknown action. Use "branches", "skills", "project-get", "project-set", "project-reset", "unclassified", "classify", "pull", "push", or "status".');
   process.exit(1);
 }
-
-
