@@ -4,6 +4,7 @@
 ._*
 .Spotlight-V100
 .Trashes
+
 ehthumbs.db
 Thumbs.db
 desktop.ini
@@ -57,7 +58,6 @@ tmp/
 # Custom Skill & Archive Backups
 .archives/
 .cache/
-.agents/.cache/evolution.json
 
 # Skill Storage & Local Cache
 skills/confluence/storage/
@@ -67,6 +67,4 @@ skills/confluence/storage/
 # Skill Logs & Debug Reports
 skills/debug/.logs/
 **/.logs/
-
-# Local Plugins
 plugins/
