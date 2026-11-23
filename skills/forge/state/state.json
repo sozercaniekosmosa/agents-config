@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "templateVersion": 1,
+  "syncedAt": "2026-11-22T10:49:00.756Z",
+  "note": "Создан мета-навык: генерация пакета навыка, аудит стандарта самообновления, ретрофит автономии",
+  "commit": "6f0080f",
+  "branch": "master",
+  "skills": [
+    {
+      "name": "forge",
+      "mode": "spec",
+      "modules": [],
+      "errors": 0
+    }
+  ]
+}

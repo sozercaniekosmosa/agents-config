@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "syncedAt": "2026-11-22T18:16:07.754Z",
+  "note": "Golden baseline перегенерирован под гид по актам: счётные блоки и дефициты убраны, прогресс по новым ключевым слотам",
+  "commit": "6f0080f",
+  "branch": "master",
+  "profiles": [
+    "act_scenes",
+    "char_body",
+    "char_core",
+    "char_psycho",
+    "char_relations",
+    "obj_core",
+    "plot_short",
+    "scene_events",
+    "scene_setting",
+    "scene_short"
+  ],
+  "suites": {
+    "wizard:dialogue": "node scripts/wizard-golden/dialogue-check.mjs",
+    "wizard:elements": "node scripts/wizard-golden/elements-check.mjs",
+    "wizard:golden": "node scripts/wizard-golden/compare.mjs",
+    "wizard:options": "node scripts/wizard-golden/options-check.mjs",
+    "wizard:profiles": "node scripts/wizard-golden/profiles-check.mjs",
+    "wizard:review": "node scripts/wizard-golden/review-check.mjs",
+    "wizard:scene-smoke": "node scripts/wizard-golden/scene-smoke.mjs"
+  },
+  "files": {
+    "scripts/wizard-golden/capture.ts": {
+      "hash": "c00f6ce8a324",
+      "loc": 179
+    },
+    "scripts/wizard-golden/compare.mjs": {
+      "hash": "a92bff3894c3",
+      "loc": 36
+    },
+    "scripts/wizard-golden/dialogue-check.mjs": {
+      "hash": "0c78fe11007d",
+      "loc": 18
+    },
+    "scripts/wizard-golden/dialogue.ts": {
+      "hash": "68f37c04e91a",
+      "loc": 142
+    },
+    "scripts/wizard-golden/elements-check.mjs": {
+      "hash": "2c1420c49a3f",
+      "loc": 18
+    },
+    "scripts/wizard-golden/elements.ts": {
+      "hash": "654451121eee",
+      "loc": 348
+    },
+    "scripts/wizard-golden/options-check.mjs": {
+      "hash": "17c495b12ede",
+      "loc": 18
+    },
+    "scripts/wizard-golden/options.ts": {
+      "hash": "d5435ee458d3",
+      "loc": 162
+    },
+    "scripts/wizard-golden/profiles-check.mjs": {
+      "hash": "bcc7abb57f6d",
+      "loc": 18
+    },
+    "scripts/wizard-golden/profiles.ts": {
+      "hash": "7e6d0975f77c",
+      "loc": 295
+    },
+    "scripts/wizard-golden/review-check.mjs": {
+      "hash": "dae24a2e32a4",
+      "loc": 18
+    },
+    "scripts/wizard-golden/review.ts": {
+      "hash": "85503e390bdf",
+      "loc": 307
+    },
+    "scripts/wizard-golden/run.mjs": {
+      "hash": "e9a8173ec529",
+      "loc": 20
+    },
+    "scripts/wizard-golden/scene-smoke.mjs": {
+      "hash": "3b365362f3d9",
+      "loc": 18
+    },
+    "scripts/wizard-golden/scene-smoke.ts": {
+      "hash": "2e7da02d9624",
+      "loc": 103
+    },
+    "scripts/wizard-golden/stubs/db.ts": {
+      "hash": "7d85f13fcadd",
+      "loc": 6
+    },
+    "scripts/wizard-golden/stubs/shared.ts": {
+      "hash": "b68bb8772cee",
+      "loc": 8
+    },
+    "src/ai/cardWizard/context.ts": {
+      "hash": "6550d36dd94f",
+      "loc": 477
+    },
+    "src/ai/cardWizard/elements.ts": {
+      "hash": "d7c702913a6c",
+      "loc": 146
+    },
+    "src/ai/cardWizard/focus.ts": {
+      "hash": "c3df9deac6a1",
+      "loc": 94
+    },
+    "src/ai/cardWizard/index.ts": {
+      "hash": "136c20de2dd7",
+      "loc": 8
+    },
+    "src/ai/cardWizard/prompts.ts": {
+      "hash": "d75544a1965e",
+      "loc": 383
+    },
+    "src/ai/cardWizard/schema.ts": {
+      "hash": "1845ae901063",
+      "loc": 104
+    },
+    "src/ai/cardWizard/service.ts": {
+      "hash": "17cee234c992",
+      "loc": 501
+    },
+    "src/ai/cardWizard/text.ts": {
+      "hash": "3db2886a029c",
+      "loc": 27
+    },
+    "src/ai/cardWizard/types.ts": {
+      "hash": "28de2e059b36",
+      "loc": 147
+    },
+    "src/components/tree/card-wizard/CardWizardChat.tsx": {
+      "hash": "d4055e652161",
+      "loc": 263
+    },
+    "src/components/tree/card-wizard/CardWizardCheckPanel.tsx": {
+      "hash": "fb9e5d616453",
+      "loc": 130
+    },
+    "src/components/tree/card-wizard/CardWizardComposer.tsx": {
+      "hash": "6bca367305d1",
+      "loc": 70
+    },
+    "src/components/tree/card-wizard/CardWizardHost.tsx": {
+      "hash": "64d6837cab2f",
+      "loc": 123
+    },
+    "src/components/tree/card-wizard/CardWizardMessageRow.tsx": {
+      "hash": "15a0f65f19b8",
+      "loc": 220
+    },
+    "src/components/tree/card-wizard/CardWizardModal.tsx": {
+      "hash": "ba2049ab2b69",
+      "loc": 287
+    },
+    "src/components/tree/card-wizard/CardWizardOptionsBlock.tsx": {
+      "hash": "f6b488368718",
+      "loc": 389
+    },
+    "src/components/tree/card-wizard/CardWizardStructurePanel.tsx": {
+      "hash": "4cbc63eb8c48",
+      "loc": 388
+    },
+    "src/components/tree/card-wizard/index.ts": {
+      "hash": "8553e844d64f",
+      "loc": 7
+    },
+    "src/db/cardWizard.ts": {
+      "hash": "d22b0217d1c7",
+      "loc": 104
+    },
+    "src/shared/cardWizard/dialogue.ts": {
+      "hash": "7480777d676d",
+      "loc": 56
+    },
+    "src/shared/cardWizard/engine.ts": {
+      "hash": "41024594f88c",
+      "loc": 606
+    },
+    "src/shared/cardWizard/guided.ts": {
+      "hash": "2da65a05ded6",
+      "loc": 290
+    },
+    "src/shared/cardWizard/index.ts": {
+      "hash": "15e3a9769ee7",
+      "loc": 11
+    },
+    "src/shared/cardWizard/options.ts": {
+      "hash": "f8540d2be084",
+      "loc": 257
+    },
+    "src/shared/cardWizard/profiles/actScenes.ts": {
+      "hash": "128e50d07974",
+      "loc": 90
+    },
+    "src/shared/cardWizard/profiles/charBody.ts": {
+      "hash": "012a2d1882d8",
+      "loc": 106
+    },
+    "src/shared/cardWizard/profiles/charCore.ts": {
+      "hash": "b38ee82bb16e",
+      "loc": 124
+    },
+    "src/shared/cardWizard/profiles/charPsycho.ts": {
+      "hash": "3ed2bed141b9",
+      "loc": 122
+    },
+    "src/shared/cardWizard/profiles/charRelations.ts": {
+      "hash": "0e1c90c9242f",
+      "loc": 86
+    },
+    "src/shared/cardWizard/profiles/index.ts": {
+      "hash": "a6c6dd2d7521",
+      "loc": 64
+    },
+    "src/shared/cardWizard/profiles/objCore.ts": {
+      "hash": "bebebd2b738d",
+      "loc": 139
+    },
+    "src/shared/cardWizard/profiles/plotShort.ts": {
+      "hash": "122f2ff7360e",
+      "loc": 425
+    },
+    "src/shared/cardWizard/profiles/profileBase.ts": {
+      "hash": "e21a9f0b4dd3",
+      "loc": 266
+    },
+    "src/shared/cardWizard/profiles/sceneEvents.ts": {
+      "hash": "d4bb32744a02",
+      "loc": 95
+    },
+    "src/shared/cardWizard/profiles/sceneSetting.ts": {
+      "hash": "ee2ec8e42364",
+      "loc": 118
+    },
+    "src/shared/cardWizard/profiles/sceneShort.ts": {
+      "hash": "2a7ce74cd52b",
+      "loc": 315
+    },
+    "src/shared/cardWizard/questions.ts": {
+      "hash": "3cf69a70dfaa",
+      "loc": 204
+    },
+    "src/shared/cardWizard/review.ts": {
+      "hash": "d368d8e3b2a3",
+      "loc": 226
+    },
+    "src/shared/cardWizard/schema.ts": {
+      "hash": "d852e4a7de1b",
+      "loc": 97
+    },
+    "src/shared/cardWizard/types.ts": {
+      "hash": "98fa675f14ca",
+      "loc": 381
+    },
+    "src/shared/cardWizard/ui.ts": {
+      "hash": "05497a0e4170",
+      "loc": 106
+    },
+    "src/store/cardWizard/index.ts": {
+      "hash": "266c68ca4c60",
+      "loc": 2
+    },
+    "src/store/cardWizard/useCardWizardStore.ts": {
+      "hash": "09e607bfc289",
+      "loc": 1196
+    }
+  }
+}
