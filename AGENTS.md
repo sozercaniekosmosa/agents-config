@@ -112,8 +112,8 @@
 
 ## 🛡️ Data Security & Version Control
 
-1. **Mandatory Git**: Git repo initialization mandatory.
-2. **Backup Before Deletion**: Before deleting files/dirs → commit changes in git.
+1. **Version Control**: Git is recommended, not mandatory: a project may run without a local repository when history lives elsewhere (remote, archive) or the repo was intentionally dropped. Missing local version control is a recorded risk, not a silent default → note it in `docs/techdebt.md` with the rollback plan.
+2. **Backup Before Deletion**: Before deleting files/dirs → keep a recoverable copy: a commit in version control, or an archive outside the working tree. Irreversible deletion of unversioned data → only after explicit user confirmation.
 
 ---
 
