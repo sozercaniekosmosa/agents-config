@@ -1,11 +1,10 @@
 ---
 name: git-flow
 description: >
-  Пошаговый интерактивный навык подготовки изменений перед коммитами, Pull Request и Issue.
-  Автоматически создает/связывает Issue ДО создания ветки, ставит номер Issue в начало имени ветки,
-  считывает открытый PR через `gh pr view`, поддерживает стратегию вливания изменений (новый коммит vs git commit --amend),
-  проводит пользователя по этапам с выводом красиво отформатированных промежуточных результатов и явным подтверждением.
-  Обеспечивает валидацию проверок, Conventional Commits и обновление описания PR.
+  Пошаговый регламент Issue → Ветка → Коммит → PR для репозитория atmus-gpna/GPNA.ISGTM-UI.
+  Базовая ветка origin/develop, ветки строго feat|fix/<issue>-<slug> (hook .husky/pre-push), RU Conventional Commits
+  (commitlint), Quality Gate проекта (tsc -b, eslint, steiger, depcruise, vitest, playwright tests/integration),
+  публикация через gh pr create --base develop.
   Триггеры: /git-flow, "подготовь коммит", "проверь pr", "создай pr", "git-flow".
 ---
 
@@ -17,13 +16,26 @@ description: >
 
 ---
 
+## 🧷 Контекст репозитория (источник истины)
+
+- **Репозиторий**: `atmus-gpna/GPNA.ISGTM-UI`, remote `origin`.
+- **Базовая ветка**: `origin/develop` (все PR → `develop`); `master` → только релиз, push запрещен.
+- **Ветки (hook `.husky/pre-push`)**: `^(feat|fix)/[0-9]+-[a-z0-9]+(-[a-z0-9]+)*$`; также `chore|hotfix/<issue>-<slug>`, `release/<version>`; кириллица → reject; `feature/`, `bugfix/` → reject.
+- **Коммиты**: commitlint conventional; `type-enum` = build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test; subject RU с заглавной, ≤72; hook `.husky/commit-msg` вырезает `Co-Authored-By:`.
+- **pre-commit**: `npx lint-staged` → `eslint --cache` + `prettier --write` для `src/**`.
+- **Quality Gate**: `npm run build` (`tsc -b && vite build`), `npm run lint`, `npm run fsd` (Steiger), `npm run check:deps:all` (depcruise), `npm run test` (vitest), `npm run doctor`.
+- **Тесты**: Vitest → только чистая логика (мапперы, парсеры, хелперы); UI/сценарии → Playwright `tests/integration/*.spec.ts` (`testDir` из `playwright.config.ts`, `baseURL http://localhost:5173`, dev-сервер поднимает `webServer`).
+- **Режим подтверждений**: системные approval-подсказки отключены → `sandbox_permissions` НЕ запрашивать; команда, упавшая по доступу, → стоп + отчет. Запрет `commit` / `push` / прогона тестов без явного согласия пользователя → правило проекта (`AGENTS.md`), не системный approval.
+
+---
+
 ## 📍 Шаг 0: Создание/привязка Issue и выбор/создание ветки
 
 Старт: СТРОГО запрос статуса Issue и выбор ветки.
 
 ### 1️⃣ Определение или создание Issue (ПЕРВЫЙ ЭТАП)
 
-Проверить контекст → запросить статус Issue.
+Проверить контекст (`git branch --show-current`, `gh pr view --json number,title,headRefName`) → запросить статус Issue.
 
 **Шаблон запроса в чат (СТРОГО с двойным переносом строк между блоками):**
 
@@ -33,6 +45,7 @@ description: >
 **Текущее состояние:**
 - **Ветка:** `<current_branch>`
 - **Связанный Issue:** `<issue_number | не привязан>`
+- **Открытый PR:** `<#number | нет>`
 
 ---
 
@@ -44,16 +57,16 @@ description: >
 
 - **Var 1 (Создать Issue)** → спросить источник title/body:
   - 1.1: Из ТЗ/сообщения чата.
-  - 1.2: Из незакоммиченных изменений (`git status`, `git diff`).
+  - 1.2: Из незакоммиченных изменений (`git status --short`, `git diff`).
   - 1.3: Свой вариант.
 
   **Правила создания Issue**:
   - Язык: строго русский (title + body).
-  - Суть: описывать только проблемы/требования, НЕ техническое решение.
+  - Суть: только проблемы/требования, НЕ техническое решение.
   - Title: СТРОГО без префиксов (`fix`, `feat`).
   - Флаги: `--assignee "@me"`, `--label "<bug|enhancement|refactor>"`.
-  - Согласование: ОБЯЗАТЕЛЬНО вывести title/body в чат → получить "Да" перед созданием.
-  - Команда: `gh issue create --title "<title>" --body "<body>" --assignee "@me" --label "<label>"` → зафиксировать `#<issue_number>`.
+  - Согласование: ОБЯЗАТЕЛЬНО вывести title/body в чат → получить «Да» перед созданием.
+  - Команда: `gh issue create --repo atmus-gpna/GPNA.ISGTM-UI --title "<title>" --body "<body>" --assignee "@me" --label "<label>"` → зафиксировать `#<issue_number>`.
 
 - **Var 2** → зафиксировать указанный `#<issue_number>`.
 
@@ -62,11 +75,12 @@ description: >
 ### 2️⃣ Выбор/создание ветки
 
 1. Текущая ветка: `git branch --show-current`.
-2. Кандидаты для новой ветки:
-   - Фичи: `feature/<issue_number>-<short-description>`
-   - Баги: `fix/<issue_number>-<short-description>`
-   - Рефакторинг: `refactor/<issue_number>-<short-description>`
-   - Прочее: `chore/...`, `docs/...`
+2. Кандидаты (только форматы, проходящие `.husky/pre-push`):
+   - Фичи: `feat/<issue_number>-<slug>`
+   - Баги: `fix/<issue_number>-<slug>`
+   - Прочее: `chore/<issue_number>-<slug>`, `hotfix/<issue_number>-<slug>`, `release/<version>`
+   - Slug: lowercase latin + hyphen, без кириллицы.
+   - Запрещено: `feature/*`, `bugfix/*`, ветки без номера Issue для feat/fix.
 
 **Шаблон запроса в чат (СТРОГО с двойным переносом строк между блоками):**
 
@@ -80,45 +94,49 @@ description: >
 ---
 
 **Выберите вариант ветки:**
-- **[Вариант 1]**: Использовать текущую ветку `<current_branch>`
-- **[Вариант 2]**: Создать новую ветку `feature/<issue_number>-<short-description>` (или `fix/...` для багов)
+- **[Вариант 1]**: Использовать текущую ветку `<current_branch>` (проверить на соответствие hook-regex)
+- **[Вариант 2]**: Создать новую ветку `feat/<issue_number>-<slug>` (или `fix/...` для багов)
 - **[Вариант 3]**: Указать своё наименование ветки
 ```
 
-3. При создании новой ветки:
-   - Привязка: `gh issue develop <issue_number> --name <branch_name>`.
-   - Переход: `git checkout -b <branch_name>`.
+3. При создании новой ветки (от `origin/develop`):
+   - `git fetch origin develop`
+   - `git checkout -b <branch_name> origin/develop`
+   - Привязка к Issue (если доступна): `gh issue develop <issue_number> --name <branch_name>`.
 
 ---
 
 ## 📍 Шаг 1: Обязательный аудит, генерация и итеративное тестирование
 
-🚨 **КРИТИЧЕСКИ: ТЕСТЫ (UNIT + E2E) И ИХ 100% SUCCESS ОБЯЗАТЕЛЬНЫ. Пропуск ЗАПРЕЩЕН.**
+🚨 **КРИТИЧЕСКИ: ПРОВЕРКИ И ТЕСТЫ ДОЛЖНЫ ПРОЙТИ 100%. Пропуск ЗАПРЕЩЕН.**
 
 1. **Синхронизация & аудит**:
-   - `git fetch origin` → rebase на базовую ветку репозитория (`origin/main`, `origin/master` или `origin/develop` — авто-определение).
-   - Аудит истории (`git log origin/<base_branch>..HEAD`) → НИКАКИХ коммитов с `Co-Authored-By: [AI]`.
-   - При дублях / ИИ-соавторах → `git reset --hard origin/<base_branch>` + `git cherry-pick`.
+   - `git fetch origin` → база `origin/develop`.
+   - `git log origin/develop..HEAD --oneline` → в истории НЕТ коммитов с `Co-Authored-By:` (hook вырезает, но проверить).
+   - Дубли/ИИ-соавторы → `git reset --hard origin/develop` + `git cherry-pick`.
 
 2. **Генерация тестов (Unit + E2E)**:
-   - Скан репозитория (`grep_search`) на `*.test.ts` / `*.spec.ts` для измененных файлов.
-   - Нет/мало тестов → агент ОБЯЗАН сгенерировать 100% кода тестов.
-   - Vitest для логики, Playwright (с изоляцией сети) для UI/фич.
+   - Скан измененных файлов на `*.test.ts` / `*.spec.ts`.
+   - Слои `entities` (мапперы, контракты, pure-lib) → Vitest: новый тест обязателен при изменении контракта/DTO.
+   - UI/сценарий (`features`, `widgets`, `pages`) → Playwright `tests/integration/<domain>.spec.ts`; unit-тесты React-компонентов запрещены правилами проекта.
+   - Тесты не ослаблять: существующие ассерты не менять и не отключать.
 
-3. **Сборка & Lint**:
-   - ДО тестов обязательно: `npx tsc -b` & `npx eslint --no-cache <changed_files>`.
-   - Архитектура и контракты: соблюдение слоев и изоляции из `docs/architecture.md` и `docs/project-rules.md`.
-   - Валидация контрактов данных: схемы соответствуют моделям, строгая типизация (Zero Any).
+3. **Сборка & Lint** (ДО тестов):
+   - `npx tsc -b` (проект на проект-ссылках; `--noEmit` не применять к `-b`).
+   - `npx eslint --no-cache <changed_files>`.
+   - Архитектура: `npm run fsd`, `npm run check:deps:all` (слои FSD, кросс-импорты, циклы).
+   - Контракты: Zod-схемы соответствуют моделям, DTO не течут из `entities`, `any`/deep imports отсутствуют.
    - Ошибки сборки/Lint → 100% фикс до запуска тестов.
 
 4. **Contract-Test Sync**:
-   - Правка Zod/DTO → ОБЯЗАТЕЛЕН одновременный прогон: `tsc -b`, `eslint`, `vitest run <changed_test>`.
-   - Запрет коммита при ошибках lint/tests.
+   - Правка Zod/DTO/маппера → обязательный прогон: `npx tsc -b`, `npx eslint --no-cache <files>`, `npx vitest run <test_file>`.
+   - Коммит при падении lint/tests запрещен.
 
-5. **Итеративный прогон (до 100% SUCCESS)**:
-   - Точечный запуск: `tsc -b && eslint`, `vitest run <file>`, `playwright test <file>`.
-   - Ошибка → локализация → фикс → повторный прогон.
-   - СТРОГИЙ БЛОК перехода на Шаг 2/4 до 0 ошибок.
+5. **Итеративный прогон (до 100% SUCCESS, точечно)**:
+   - `npx vitest run <path>` → строго по затронутым файлам, весь suite (`npm run test`) локально не запускать.
+   - `npx playwright test tests/integration/<spec>`.
+   - Только по явному согласию пользователя на прогон тестов (`AGENTS.md`).
+   - Ошибка → локализация → фикс → повтор до 0 ошибок.
 
 6. **Отчет в чат (ОБЯЗАТЕЛЬНО)**:
 
@@ -133,22 +151,18 @@ description: >
 - `<test_filepath>`
 
 **Результат прогона:**
-- **Статус:** `100% SUCCESS` (все тесты и линтер успешно пройдены, 0 ошибок)
+- **Статус:** `100% SUCCESS` (0 ошибок)
 - **Выполненные команды:**
   - `npx tsc -b`
   - `npx eslint --no-cache <path>`
+  - `npm run fsd` / `npm run check:deps:all`
   - `npx vitest run <path>`
-  - `npx playwright test <path>`
+  - `npx playwright test tests/integration/<spec>`
 
 ---
 
 Переходить к Шагу 2 (Аудит 100% сетевой изоляции E2E)? ("Да" / "Примени")
 ```
-
-7. **Локальный запуск (Точечно)**:
-   - СТРОГИЙ ЗАПРЕТ запуска всего suite (`npm test`).
-   - Unit: `npx vitest run <path>`.
-   - E2E: `npx playwright test <path>`.
 
 ---
 
@@ -156,30 +170,29 @@ description: >
 
 🚨 **КРИТИЧЕСКИ: ШАГ ОБЯЗАТЕЛЕН. Переход к коммиту (Шаг 4) без E2E с 100% изоляцией и 100% SUCCESS ЗАПРЕЩЕН.**
 
-1. **Подготовка E2E & Сетевая изоляция (`tests/integration/`)**:
-   - Нет E2E спеки для измененного UI → ОБЯЗАТЕЛЬНО написать новую.
-   - СТРОГИЙ мок внешних URL/IP/iframe (context level): `await context.route("https://<host>/**", ...)`
-   - 100% Mock REST API (`**/api/*`) в `test.beforeEach` (`route.fulfill()`).
-   - Отключение SignalR/WS (`**/api/realtime/**`) → `route.abort()`.
-   - Авторизация через `auth.fixture.ts` (`test.use({ storageState: authFile })`).
-   - Исключить `page.waitForTimeout()`, строго `expect(locator).toBeVisible()`.
-
-2. **Локальный прогон & Chrome-Error Check**:
-   - Локально `npx playwright test <path>` → строго 100% SUCCESS.
-   - Ошибка `chrome-error://chromewebdata/` / таймаут → дополнить моки в `context.route` → перетестировать.
-
-3. **Отчет в чат (СТРОГИЙ БЛОК)**:
+1. **База E2E (`tests/integration/`)**:
+   - `playwright.config.ts`: `testDir: ./tests/integration`, `baseURL: http://localhost:5173`, `webServer: npm run dev` → сервер поднимается сам, внешний стенд не нужен.
+   - Авторизация: `page.addInitScript` → `window.ENV.ssoEnabled = false`, `localStorage SSO_ENABLED=false`, `mock_user_role` (Viewer/Editor).
+   - Данные: MSW (`MOCK_ENABLED=true`, handlers в `src/shared/api/mocks/handlers.ts`) или `page.route` / `context.route` с `route.fulfill()`.
+2. **Изоляция сети**:
+   - 100% мок REST API, реальные внешние URL/IP → `context.route("https://<host>/**", ...)`.
+   - SignalR/WS/real-time → `route.abort()` или мок.
+   - Никаких `page.waitForTimeout()`; ожидания только `expect(locator).toBeVisible()`.
+3. **Локальный прогон & Chrome-error Check**:
+   - `npx playwright test tests/integration/<spec>` → строго 100% SUCCESS.
+   - `chrome-error://chromewebdata/` / таймаут → дополнить моки → перетестировать.
+4. **Отчет в чат (СТРОГИЙ БЛОК)**:
 
 ```markdown
 [CFON] Шаг 2/5. Аудит 100% сетевой изоляции E2E тестов для CI
 
 **Статус E2E спеки:** `<создана / актуализирована / проверена существующая>`
-**Файл спеки:** `<path_to_spec_file>`
+**Файл спеки:** `tests/integration/<spec>.spec.ts`
 
 **Сетевая изоляция и прогон:**
-- **REST API:** 100% замоканы (`route.fulfill()`)
-- **SignalR/WebSocket:** отключены (`route.abort()`)
-- **Внешние IP/URL:** замоканы через `context.route` (исключен `chrome-error`)
+- **REST API:** 100% замоканы (MSW / `route.fulfill()`)
+- **SignalR/WebSocket:** отключены
+- **Внешние IP/URL:** замоканы через `context.route`
 - **Результат локального запуска:** `npx playwright test <path>` → `100% SUCCESS`
 
 ---
@@ -187,7 +200,7 @@ description: >
 Переходить к Шагу 3 (Инспекция статуса и нумерованный выбор файлов)? ("Да" / "Примени")
 ```
 
-4. **Блок**: без "Да" / "Примени" от пользователя `git commit` запрещен.
+5. **Блок**: без «Да» / «Примени» `git commit` запрещен.
 
 ---
 
@@ -195,7 +208,8 @@ description: >
 
 1. `git status --short`.
 2. Нумерованный список файлов в чат (`[Staged]`, `[Unstaged]`, `[Untracked]`).
-3. **Запросить подтверждение**:
+3. Не индексировать: артефакты сборки, `test-results/`, `playwright-report/`, локальные `.env`.
+4. **Запросить подтверждение**:
 
 ```markdown
 [CFON] Шаг 3/5. Контекст: Ветка `<current_branch>`, Issue #<issue_number>
@@ -211,17 +225,19 @@ description: >
 Укажите номера файлов для индексации/исключения или подтвердите текущий состав для индексирования ("Да" / "Примени").
 ```
 
-4. Корректировка индекса: `git add <file>`, `git reset <file>`.
+5. Корректировка индекса: `git add <file>`, `git reset <file>`.
 
 ---
 
 ## 📍 Шаг 4: Формирование и фиксация коммита (Amend vs Новый коммит)
 
-1. Использовать `#<issue_number>` с Шага 0.
-2. Для Amend: `git commit --amend --no-edit` + `git push --force-with-lease`.
-3. Для New Commit: 
-   - Формат: `<type>(<scope>): <Описание> (#<issue_number>)`
-   - Ограничения: Описание с Заглавной, длина < 72 (макс 100).
+1. Issue из Шага 0 → суффикс `(#<issue_number>)`.
+2. **New Commit**: `<type>(<scope>): <Описание> (#<issue_number>)`
+   - `type` ∈ {feat, fix, refactor, test, docs, style, chore, perf, ci, build, revert} (commitlint).
+   - `scope` = слой/слайс: `entities/object-tree`, `features/unplanned-works`, `shared/api`.
+   - Описание: RU, заглавная, пассивный перфект (Добавлен/Исправлен/Реализован/Создан/Обновлён), ≤72 символа, без точки.
+   - Без `Co-Authored-By:` и AI-подписей.
+3. **Amend**: `git commit --amend --no-edit` + `git push --force-with-lease` — только если ветка не шарится с коллегами.
 4. При неоднозначности (Amend/New) → спросить в чате.
 5. **Запросить подтверждение**:
 
@@ -243,30 +259,22 @@ description: >
 Какую команду выполнить? Подтвердите выбор ("Вариант 1" / "Вариант 2").
 ```
 
-6. Выполнить команду после "Да".
+6. Выполнить команду после «Да». `pre-commit` (`lint-staged`) должен пройти; hook не обходить (`--no-verify` запрещен).
 
 ---
 
 ## 📍 Шаг 5: Подготовка и публикация Pull Request (`git push` + `gh pr create`)
 
-1. **Проверка PR** (`gh pr view`):
+1. **Проверка PR** (`gh pr view --json number,baseRefName,isDraft`):
    - Amend → `git push origin <branch> --force-with-lease`.
-   - New Commit (открыт PR) → `git push origin <branch>`.
-   - New PR → `gh pr create` (по шаблону).
-2. **Опциональный номер (СТРОГИЙ БЛОК)**: запросить у пользователя номер-суффикс для PR (напр. `108`). Без ответа `gh pr create` ЗАПРЕЩЕН.
-3. **Заголовок PR**:
-   - СТРОГО без префиксов (`fix`, `feat`).
-   - Формат: `<Название фичи> (#<issue_number>)[ <user_number>]` (напр. `Фикс кнопки (#537) 108`).
-4. **Лейблы**:
-   - Авто-определение типа (`bug`, `enhancement`, `refactor`).
-   - `gh pr create ... --label "<label>"` или `gh pr edit <pr_number> --add-label "<label>"`.
-5. **Флаги `gh pr create`**:
-   - `--assignee "@me"`.
-   - `--label "<label>"`.
-   - `--title "<Title> (#<issue_number>)[ <user_number>]"`.
-   - `--body-file "<path>"`. Запрещено короткое `--body`. ОБЯЗАТЕЛЬНА генерация `.md` по шаблону.
-
-6. **Шаблон описания PR (в `.md` файл)**:
+   - New Commit (PR открыт) → `git push origin <branch>`.
+   - Новый PR → `gh pr create --base develop`.
+2. **Hooks**: `pre-push` проверяет имя ветки и запрет push в `develop`/`master`; ошибка hook → переименовать ветку (`git branch -m`), не обходить.
+3. **Опциональный номер (СТРОГИЙ БЛОК)**: запросить номер-суффикс PR (напр. `108`). Без ответа `gh pr create` ЗАПРЕЩЕН.
+4. **Заголовок PR**: без префиксов (`fix`, `feat`); формат `<Название фичи> (#<issue_number>)[ <user_number>]`.
+5. **Лейблы**: авто-определение (`bug`, `enhancement`, `refactor`); `gh pr create ... --label "<label>"` или `gh pr edit <pr_number> --add-label "<label>"`.
+6. **Флаги**: `--base develop`, `--assignee "@me"`, `--label "<label>"`, `--title "<Title> (#<issue>)[ <номер>]"`, `--body-file "pr-body.md"`. Короткое `--body` запрещено; `.md` по шаблону обязателен, после создания удалить временный файл (или оставить вне `src`).
+7. **Шаблон описания PR (в `.md` файл)**:
 
 ```markdown
 <Краткая суть изменений>
@@ -277,29 +285,30 @@ description: >
 
 ## Чек-лист
 
-- [x] PR: направлен в правильную ветку
+- [x] PR: направлен в правильную ветку (`develop`)
 - [x] PR: назначен исполнитель PR и указаны нужные лейблы
 - [x] PR: проверен diff, ничего лишнего в PR не попало
 - [x] PR: прилинкованы затронутые issue и связанные PR
 - [x] PR: есть описание изменений
 - [<has_tests_check>] Тесты: новый функционал и исправленные баги покрыты тестами
 
-Closes #<issue_number> <!-- или Closes https://github.com/atmus-gpna/GPNA.ISGTM-UI/issues/<issue_number> -->
+Closes #<issue_number>
 
 ## Опционально
 
-- [x] Коммиты: проименованы в соответствии с правилами conventionalcommits v1.0.0
+- [x] Коммиты: проименованы в соответствии с conventionalcommits v1.0.0
 ```
 
-*(Где `<has_tests_check>` = `x` если unit/e2e тесты реально написаны/уже были в Шаге 1, иначе ` `).*
+*(<has_tests_check> = `x` если unit/e2e тесты реально написаны/уже были в Шаге 1, иначе пусто.)*
 
-7. **Запросить подтверждение**:
+8. **Запросить подтверждение**:
 
 ```markdown
 [CFON] Шаг 5/5. Подготовка и публикация Pull Request
 
 **Проект PR:**
 - **Title:** `<Название фичи без префикса> (#<issue_number>)`
+- **Base:** `develop`
 - **Ветка:** `<current_branch>`
 
 ---
@@ -308,20 +317,22 @@ Closes #<issue_number> <!-- или Closes https://github.com/atmus-gpna/GPNA.ISG
 
 Выберите действие:
 - **[Вариант 1]**: Создать PR без номера
-- **[Вариант 2]**: Указать номер (напишите число, например `119`, тогда заголовок будет `... (#<issue>) 119`)
+- **[Вариант 2]**: Указать номер (напишите число, например `119`)
 ```
 
 ---
 
 ## 🛠️ Справочник
 
-- **Контекст**: динамический (`git branch`, `gh pr view`). Нет хардкода.
-- **Типы**: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`.
+- **Репозиторий/база**: `atmus-gpna/GPNA.ISGTM-UI` → `develop`; `gh` ≥ 2.95 доступен.
+- **Контекст**: динамический (`git branch --show-current`, `gh pr view`). Нет хардкода ветки/PR.
+- **Типы коммитов**: строго `commitlint.config.js` (`type-enum`).
 - **Автозакрытие**: `Closes #<issue_number>`.
-- **CFON**: см. `AGENTS.md`.
+- **Правила проекта**: `AGENTS.md`, `docs/project-rules.md`, `docs/arhitecture.md`, `.agents/AGENTS.md`.
+- **CFON**: см. `.agents/AGENTS.md`.
 
 ## 🔄 Петля Эволюции Навыка (Feedback Loop)
 
-- При завершении цикла PR/коммита проверить соответствие регламента git-flow реальным процессам ветвления и валидаций.
-- При выявлении изменений чеклиста или линтеров → предложить актуализацию `.agents/skills/git-flow/SKILL.md` (`/learn` или подтверждение в чате).
-
+- При завершении цикла PR/коммита сверить регламент с реальными hook-ами (`.husky/pre-commit`, `commit-msg`, `pre-push`) и скриптами `package.json`.
+- Изменились hook-и/скрипты/базовая ветка → предложить актуализацию этого файла (подтверждение в чате).
+- Лог: `node .agents/skills/observer/scripts/observer.cjs --log-history git-flow <trigger> <improvement>`.
