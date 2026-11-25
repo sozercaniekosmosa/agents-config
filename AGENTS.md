@@ -44,7 +44,7 @@
 5. **Generalization Filter (Zero Specificity Bias)**: All skill and rule improvements must be formulated strictly in generalized architectural terms (layers, DAG, ACL, interface contracts, lifecycles). Committing private paths, individual component/module names, or narrow project hacks into specifications is strictly prohibited.
 6. **Evolution Ledger (.agents/evolution.json)**: Every update to skill specifications or global rules must be logged in the append-only journal `.agents/evolution.json` (`node .agents/skills/observer/scripts/observer.cjs --log-history [scope] [trigger] [improvement]`).
 7. **Troubleshooting Harvest**: Systematic errors from local `[module]/TROUBLESHOOTING.md` files must be generalized into universal skill rules without referencing specific component names.
-8. **Upstream Sync**: As generalized skill improvements accumulate, the agent proposes publishing changes to the central repository via `/initialization push`.
+8. **Upstream Sync**: As generalized skill improvements accumulate, the agent proposes publishing changes to the central repository via `/agents push`.
 9. **Observer & Continuous Request Analysis**:
    - **Request Logging**: On completing any user task, record intent and friction in `.agents/evolution.json` (`node .agents/skills/observer/scripts/observer.cjs --record [intent] [skill] [friction]`).
    - **Audit Triggers**: Audit executes when `requestCount >= 10` OR time delta from `lastAudit >= 2h` OR upon explicit `/check` / `/observer`.
