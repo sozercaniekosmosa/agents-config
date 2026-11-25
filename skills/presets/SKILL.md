@@ -35,14 +35,14 @@ argument-hint: "[check|report|audit|update] (опционально; по умо
 | `node .agents/skills/presets/scripts/presets-lint.cjs` | данные набора: id, label, value, group, fieldId, подписи палитры |
 
 <!-- AUTO:PRESETS:START -->
-- Синхронизировано: 22.11.2026 16:26 (— @ —)
-- Файлов: 28 · строк: 1 999
-- src/shared/templates/presets — 18 файл(ов) · 944 строк
-- src/shared/templates/fields — 7 файл(ов) · 586 строк
-- src/components/tree/section-card/SectionCardPresetPalette.tsx — 1 файл(ов) · 249 строк
+- Синхронизировано: 23.11.2026 20:38 (master @ 6f0080f)
+- Файлов: 65 · строк: 5 044
+- src/shared/templates/presets — 55 файл(ов) · 3 941 строк
+- src/shared/templates/fields — 7 файл(ов) · 592 строк
+- src/components/tree/section-card/SectionCardPresetPalette.tsx — 1 файл(ов) · 291 строк
 - src/components/tree/section-card/presetSearch.ts — 1 файл(ов) · 113 строк
 - src/components/tree/section-card/useSectionCardPresets.ts — 1 файл(ов) · 107 строк
-- Крупнейший файл: src/components/tree/section-card/SectionCardPresetPalette.tsx — 249 строк · в пределах лимита
+- Крупнейший файл: src/components/tree/section-card/SectionCardPresetPalette.tsx — 291 строк · в пределах лимита
 <!-- AUTO:PRESETS:END -->
 
 ## Карта базы

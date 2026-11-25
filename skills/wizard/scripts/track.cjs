@@ -74,17 +74,25 @@ function collectSuites() {
   return suites;
 }
 
-// Идентификаторы профилей: строка id: '...' в profiles/*.ts.
+// Идентификаторы профилей: строка id: '...' в profiles/**/*.ts, включая
+// подкаталоги (крупный профиль разнесён на profile.ts + systems.ts).
 function collectProfiles() {
   const dir = path.join(ROOT, 'src', 'shared', 'cardWizard', 'profiles');
   const ids = [];
-  for (const file of fs.readdirSync(dir).sort()) {
-    if (!file.endsWith('.ts') || file === 'index.ts') continue;
-    const content = fs.readFileSync(path.join(dir, file), 'utf8');
-    const match = /^\s{2}id:\s*'([^']+)'/m.exec(content);
-    // Фабрика профилей и общие модули не объявляют статический id — это не профиль.
-    if (match) ids.push(match[1]);
-  }
+  const visit = (current) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (entry.isDirectory()) {
+        visit(path.join(current, entry.name));
+        continue;
+      }
+      if (!entry.name.endsWith('.ts') || entry.name === 'index.ts') continue;
+      const content = fs.readFileSync(path.join(current, entry.name), 'utf8');
+      const match = /^\s*id:\s*'([^']+)'/m.exec(content);
+      // Фабрика профилей и общие модули не объявляют статический id — это не профиль.
+      if (match) ids.push(match[1]);
+    }
+  };
+  visit(dir);
   return ids;
 }
 

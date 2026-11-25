@@ -8,7 +8,7 @@
 | Слой | Каталог | Публичный баррель | Содержимое |
 | --- | --- | --- | --- |
 | shared | `src/shared/cardWizard/` | `index.ts` → types, engine, dialogue, review, options, schema, profiles, ui | профили, типы, движок, схема, тексты |
-| ai | `src/ai/cardWizard/` | `index.ts` → types, context, schema, prompts, service | контекст, промпты, JSON-контракты, агент |
+| ai | `src/ai/cardWizard/` | `index.ts` → types, context, schema, prompts, focus, elements, agent | контекст, промпты, JSON-контракты, детерминированные контроли, агент |
 | store | `src/store/cardWizard/` | `index.ts` → `useCardWizardStore` | Zustand-сессия |
 | components | `src/components/tree/card-wizard/` | `index.ts` → Host, Modal, Chat, Composer, MessageRow, StructurePanel | UI |
 | db | `src/db/cardWizard.ts` | функции модуля db | JSON-сессия |
@@ -23,17 +23,17 @@
 | Поле | Смысл |
 | --- | --- |
 | `id`, `title` | идентификатор (ключ сессии) и заголовок |
-| `match` | `isWizardProfileMatch`: node kind/section key |
-| `slots[]` | `key, title, kind ('text'\|'list'), hint, required, countSpec?, prefill?` |
-| `sections[]` | разделы итогового текста: `key, title, format ('markdown'\|'prose'), sources[], instructions` |
+| `matches` | `isWizardProfileMatch`: `idIncludes[]`, `titles[]`, `nodeTypes[]`, `parentType` |
+| `slots[]` | `key, title, hint, ask, essential?, kind ('text'\|'list'), count?, prefill?` |
+| `sections[]` | разделы итогового текста: `key, heading, kind, ordered?, maxItems?, countsSlot?, slots[]` |
 | `context` | селекторы контекста проекта (общие параметры, персонажи, сцены, акты, арка, родитель, соседи) |
-| `serialize` | `mode: 'markdown'\|'prose'`, заголовки, `arc?`, разделители |
-| `prompts` | `requestTags {step, compose, option, check}`, `*System`, `*Task`, `labels`, `fallbacks`, шаблоны с `{{TAG}}` |
+| `serialize` | правила сериализации контекста: `general[]`, `entityBlocks[]`, `scenes?`, `acts?`, `arc?`, `cardContent?`, `parent?`, `siblings?`, `maxChars` |
+| `prompts` | `requestTags {step, compose, option, check, focus?}`, `*System` (`focusSystem?`), `answerTask`, `steerTask`, `composeTask`, `optionTask`, `checkTask`, `focusTask?`, `labels`, `fallbacks`, шаблоны с `{{TAG}}` |
 | `ui` | `title, subtitle, applyButton`, опции: `draftStale?, editConfirm?, rechooseConfirm?, checkTitle?, checkInvalidate?, checkKeep?, checkClean?, invalidMark?` |
 | `readyThreshold` | доля обязательных слотов для «готово» |
 | `openingSlot?` | слот старта интервью: пока он неизвестен и в диалоге нет ни одного вопроса, мастер спрашивает именно его (логлайн в `plot_short`) |
-| `applyMode` | `replace` / `append` |
-| `guided?` | Сценарий «по актам»: `intro[]` (вопросы до меню), `topics[]` (пункты меню акта), `nextActLabel`, `finishLabel`, `menuTitle`, `singleActTitle`; меню и переходы строит `guided.ts` |
+| `apply` | `{ mode: 'replace' \| 'append' }` |
+| `guided?` | Сценарий «по актам»: `header[]` (разделы над актами), `intro[]` (вопросы до меню), `topics[]` (пункты меню акта), `closing[]` (сводки после актов), `menuPriority[][]` (группы важности: 1 — зелёная точка, 2 — жёлтая, 3 — серая; меню сортируется по группам, внутри группы — позиция раздела в группе, а не порядок `topics`), `menuRecommendations{}` / `menuRecommendationsByAct{}` / `menuRecommendationsState{}` (мотивация рядом с кнопкой раздела: зачем его прорабатывать; нет — берётся `hint` слота), `actMinimum[]` (минимум разделов акта; нет поля — первая группа `menuPriority`, пустой массив — гейт выключен), `nextActBlockedHint` (`{sections}`), `nextActLabel`, `nextActHint`, `finishLabel`, `menuTitle`; меню, переходы и гейт строит `guided/*` |
 
 - Профиль-анкета собирается фабрикой `profiles/profileBase.ts` → `createWizardProfile(spec)`: слоты, разделы, контекст, сериализация, правила сборки, `composeTask`, профильные принципы, теги и `WizardProfileUiSpec`. Промпты шага/сборки/вариантов/проверки, подписи и подстраховки — общие, поэтому новый мастер-анкета — это конфигурация, а не копия контракта.
 - `WizardProfileUiSpec` (`types.ts`): обязательные `subtitle`, `structureLabel`, `readyMessage`, `emptyComposeError`; опциональные `applyButton`, `emptyError`. Заголовок профиля (`ui.title`) берётся из `profile.title`, подтверждение замены и сообщение о записи собираются фабрикой.
@@ -41,7 +41,8 @@
 - `countSpec` (`WizardSlotCountSpec`): `min, max, default, mode` и необязательный `option` — ключ числового поля карточки (`quantEvents` у `scene_events`, `quantScene` у `act_scenes`). В `plot_short` количественных слотов нет: списки (повороты, события, места, предметы, второстепенные герои) собираются без `count` и `countsSlot`. Число элементов при открытии мастера берётся из карточки, а `default` остаётся подстраховкой; диапазоны слоя равны диапазонам поля карточки (1..25), дефолты полей — `DEFAULT_QUANT_EVENTS`/`DEFAULT_QUANT_SCENE` в `src/shared/nodeOptions.ts`.
 - Реестр: `profiles/index.ts` → `WIZARD_PROFILES` (порядок = приоритет), `resolveWizardProfile(node)`, `getWizardProfileById(id)`.
 - Дефолты текстов — `ui.ts` (`DEFAULT_WIZARD_*`); профиль может не задавать ни одного `ui`-текста.
-- Текущие профили: `plot_short` (Сюжет кратко), `scene_short` (краткое описание сцены), `scene_events` (События сцены), `scene_setting` (Описание сцены), `act_scenes` (план сцен акта), `char_core` (Основные персонажа), `char_psycho` (характер персонажа), `char_body` (внешность персонажа), `char_relations` (связанность персонажей), `obj_core` (Основные объекта).
+- Реестр (13): `plot_short` (Сюжет кратко), `scene_short` (Краткое описание сцены, prose), `scene_events` (События сцены, счётный), `scene_setting` (Описание сцены), `act_scenes` (план сцен акта, счётный), `event_item` (событие бита, prose), `char_core`, `char_psycho`, `char_body`, `char_style`, `obj_core`, `obj_visual`, `obj_physical`. Карточки без профиля (концепт-арты, название кратко, связи) мастера не имеют — кнопка скрыта.
+- `scene_short` обслуживает подраздел сцены `scene_short_desc`: матч по `idIncludes`/`titles` + `parentType: 'scene'`; удаление профиля скрывает Мастер у карточки, поэтому реестр обязан покрывать все карточки с осмысленным мастером.
 
 ## 3. Сессия и сообщения
 
@@ -62,7 +63,7 @@
 | `check` | `WizardDialogueCheck \| null` — актуальна только на своей ревизии |
 | `updatedAt` | время записи |
 
-`WizardMessage`: `id, role ('assistant'\|'user'), text, createdAt, facts?, questionSlot?, options?, kind? ('answer'\|'question'), answersMessageId?, optionIndex?, menu?, menuKeys?, actIndex?` — `menu: true` помечает навигационное меню акта, `menuKeys` параллельны `options` (`slot:<key>` | `next-act` | `finish`), `actIndex` — номер акта арки (с 1).
+`WizardMessage`: `id, role ('assistant'\|'user'), text, createdAt, facts?, questionSlot?, options?, optionPriorities?, kind? ('answer'\|'question'), answersMessageId?, optionIndex?, menu?, menuKeys?, actIndex?, actTotal?, closing?, continuation?` — `menu: true` помечает навигационное меню акта (в нём только разделы), `menuKeys` параллельны `options` (`slot:<key>` | `next-act` | `finish` у legacy), `actIndex`/`actTotal` — место акта в арке, `closing` — финальная сводка, `continuation` — вопрос «допишите мысль». `optionPriorities` параллельны `options` (1–3 или null).
 `WizardFact`: `slot, value, replace?` (`replace` — новое значение полностью заменяет слот).
 `WizardConflict`: `messageId, slot?, reason`; `WizardDialogueCheck`: `revision, questionId, conflicts[], checkedAt`.
 `WizardStatus`: `idle|loading|thinking|suggesting|composing|checking|error`; для ошибок стор помнит `errorStage: 'step'|'option'|'check'|'compose'`.
@@ -106,7 +107,8 @@
 - `buildLocalWizardSummary`, `renderWizardSummary` — локальная сборка без ИИ.
 - `truncateWizardMessages`, `countWizardMessagesAfter`, `editWizardAnswer`, `nextWizardDialogueRevision`, `isWizardDraftStale` — работа с веткой и ревизиями.
 - `splitWizardItems`, `getWizardSlot`, `isWizardSlotKey`, `countableWizardSlots`, `nextUncoveredWizardSlot` — слоты.
-- Гид по актам (`guided.ts`): `resolveWizardActs` (акты проекта → этапы арки → один виртуальный акт), `currentWizardActIndex` (последняя реплика с `actIndex`), `isWizardMenuMessage`, `buildWizardMenuMessage` (пункты разделов + next-act/finish), `resolveWizardMenuChoice` (индекс или дословная подпись), `pendingWizardIntroSlot`, `pendingWizardGuidedFact` (ответ = один элемент раздела), `mergeWizardGuidedFact`, `nextWizardGuidedTarget` (интро → меню акта → вопрос), `formatWizardGuidedQuestion`, `invalidWizardGuidedSlots`.
+- Гид по актам (`shared/cardWizard/guided/*`): `resolveWizardActs` (акты проекта → этапы арки → один виртуальный акт), `currentWizardActIndex`, `isWizardMenuMessage`, `resolveGuidedCommand` (одна команда следующего шага: `question`/`menu`/`closing`/`ready`/`reply`), `nextWizardGuidedTarget` (интро → меню), `chronologicalWizardGuidedTopics` (порядок сюжета минус intro/closing), `pendingWizardIntroSlot` / `pendingWizardClosingSlot`, `isWizardRequiredSlot`, `isWizardClosingMessage`, `pendingWizardGuidedFact` (ответ = один элемент раздела), `mergeWizardGuidedFact`, `isUnfinishedWizardAnswer` (многоточие → дописать мысль). Меню (`menu.ts`): `wizardMenuPriorities`, `buildWizardMenuItems` (сортировка по важности), `wizardMenuRecommendation`, `buildWizardMenuMessage` (только разделы), `refreshWizardMenuMessage` / `backfillWizardMenuPriorities`, `resolveWizardMenuChoice` (индекс или подпись; ключи legacy без `menuKeys` — по названию раздела, не по позиции). Кнопка акта — `resolveWizardActAction` (`kind`, `label`, `disabled`, `blockedHint`, `brief`).
+- Гейт перехода по актам (`guided.ts`): `wizardActMinimumSlots(profile)` — явный `guided.actMinimum` или первая группа `menuPriority`; ключи вне `topics` отбрасываются, дубли схлопываются. `wizardActGate(profile, known)` → `{ minimum, missing }`: раздел минимума без единого элемента держит переход; `isWizardActGateOpen(gate)` — переход разрешён. Раздел считается разобранным и по значению карточки, и по ответу автора (known = предзаполнение + факты ленты). Гейт обязан применяться в двух местах одной функцией: disabled-чип в меню (`CardWizardAction`) и отказ действия стора `nextAct`; подсказка — `wizardActGateText(profile, titles)` (`nextActBlockedHint` / `DEFAULT_WIZARD_ACT_GATE_HINT`).
 - `countWizardSlotElements(slot, base, elements)` — сколько элементов собрано: предзаполнение проекта + факты диалога, дедуп по нормализованному ключу и по префиксу имени («Зайц» ⊂ «Зайц — союзник»). Единственный счётчик для панели, промпта и дефицита.
 - Предзаполнение проекта (`countWizardSlotItems`) режется по строкам, `;` и нумерации: список «1. … 2. …» в одну строку — это два элемента, а не один. Свободный текст ответов так не режется никогда.
 - `listWizardSlotElements(slot, base, elements)` — те же элементы строкой на элемент: текст + `messageId` (null у предзаполнения проекта). `countWizardSlotElements` — её длина, поэтому счёт и список не расходятся.
@@ -122,13 +124,13 @@
 
 ## 6. Варианты ответа (`options.ts`)
 
-- Лимиты: `MAX_WIZARD_OPTIONS = 9` (предел панели ответов), `WIZARD_SUGGESTIONS_MIN = 5` / `WIZARD_SUGGESTIONS_MAX = 6` (готовых вариантов к вопросу), `WIZARD_OPTIONS_BATCH = 5` (запрос «+ варианты»), `MAX_WIZARD_OPTION_CHARS = 400`.
-- `wizardOptionsRoom` — свободные места до предела панели; `addOption` просит у модели не больше, чем влезает, иначе модель тратит ответ на отброшенное.
-- `WizardOptionIssue`: `empty|duplicate|limit|bad-index|unchanged|busy|not-active|not-found|not-assistant`.
-- `canAddWizardOptions` — есть место в списке (лимит `MAX_WIZARD_OPTIONS`); `collectWizardOptions` — все уже звучавшие варианты (антидубль в промпте).
+- Константы: `WIZARD_SUGGESTIONS_MIN = 6` (готовых вариантов к вопросу, верхней границы и предела панели нет), `WIZARD_OPTIONS_BATCH = 5` (порция «+ варианты»), `MAX_WIZARD_OPTION_CHARS = 400` (свой вариант).
+- `WizardOptionIssue`: `empty|duplicate|bad-index|unchanged|busy|not-active|not-found|not-assistant`; лимита списка нет.
+- `collectWizardOptions` — все уже звучавшие варианты (антидубль в промпте); `normalizeWizardOptionPriority` / `orderWizardOptionsByPriority` — метки и устойчивая сортировка.
 - Добавление вариантов (`addOption` / `addOptionText`) разрешено у открытого вопроса И у уже отвеченного (`findWizardAnswer`): сначала дополнить список, потом перевыбрать. Гейт стора — `canAddOptionsTo`, UI — `canManage = active || answered`.
 - Правка текста и удаление варианта — только у открытого вопроса (`findActiveWizardQuestion`): правка выбранного варианта переписывает ответ автора, это не должно происходить у исторических реплик.
 - `normalizeWizardElementOptions` — вариант ответа сводится к одному элементу: сгруппированный список («1. … 2. …») отдаёт первый пункт, дубли схлопываются.
+- `stripWizardAnswerAside` — снимает хвостовую ремарку модели о замысле из текста ответа: фрагмент после тире или в скобках срезается только когда начинается с метки приёма («так», «этим», «здесь»), называет ремесленный глагол (показываю, передаю, задаю…) и говорит от лица автора или про читателя; обычное авторское тире («Кай — картограф») остаётся. Применяется в `cleanModelText`, поэтому и варианты, и факты попадают в раздел без объяснения приёма.
 
 ## 7. Перевыбор и проверка (`review.ts`)
 
@@ -147,14 +149,15 @@
 | `addOption` | `WizardOptionRequest` | `WizardOptionResult` | порция новых вариантов, без повторов |
 | `check` | `WizardCheckRequest` (messageId, previousText?) | `WizardCheckResult` | JSON-конфликты, ошибка при невалидном JSON |
 | `compose` | `WizardComposeRequest` | `WizardComposeResult` | markdown/prose по `serialize` |
-| `guidedQuestion` | `WizardFocusRequest` (слот + акт + `intro?`) | `WizardFocusResult` (вопрос + 5–6 вариантов) | промпт `buildWizardFocusPrompts`, JSON `{reply, suggestions}`; факты не извлекаются |
+| `guidedQuestion` | `WizardFocusRequest` (слот + акт + `intro?`/`closing?`/`continuation?`) | `WizardFocusResult` (вопрос + 6+ вариантов) | промпт `buildWizardFocusPrompts`, JSON `{reply, suggestions}`; факты не извлекаются |
 
 - Промпты: `buildWizardStepPrompts`, `buildWizardOptionPrompts`, `buildWizardCheckPrompts`, `buildWizardComposePrompts`; шаблоны уходят из профиля (`requestTags`). Шаг интервью несёт блок «ЧТО УЖЕ СПРОШЕНО И ОТВЕЧЕНО» (`askedQuestions` + `formatWizardAskedQuestions`) перед транскриптом, поэтому усечение истории не скрывает прежние вопросы и ответы.
+- Промпты, где модель пишет варианты (`stepSystem`, `optionSystem`, `focusSystem` профиля), запрещают ремарки о замысле: вариант — только готовый ответ автора, приём должен быть виден из деталей, а не назван.
 - `elements.ts` → `applyWizardElementControl`: детерминированный контроль счётных слотов поверх ответа модели. Перед дефицитом спрашивает `openingSlot`, если интервью ещё не начато; ответ автора на счётный вопрос фиксируется как элемент до выбора следующего вопроса. Вход — `baseKnown` (предзаполнение проекта), факты модели и лента; работает только в режиме ANSWER. Есть дефицит — `nextStep` подменяет текст вопроса на `buildWizardElementQuestion`, варианты ответа сводит к одному элементу, а ответ автора, не попавший в факты, фиксирует как элемент слота (страховка от повторного вопроса). Возвращает `null`, когда дефицита нет.
 - `buildFallbackStepResult` при невалидном JSON спрашивает дефицитный слот поштучно, а не «первый незакрытый».
 - JSON-схемы ответов — `src/ai/cardWizard/schema.ts`; невалидный ответ → исключение с русским текстом, не «пустой результат».
 - Контекст проекта — `context.ts`: общие параметры, сущности, сцены/акты, арка, родитель, соседи; тяжёлые чтения не блокируют UI.
-- Mock-режим: `src/ai/mockMode.ts`, включение — `localStorage['studiobook_ai_mock_mode'] = 'true'`; диспетчеризация по `requestTags` (`step/focus/option/check/compose`), `focus` отдаёт вопрос раздела и шесть вариантов без дублирующего префикса акта. Новый тег = новая ветка mock.
+- Mock-режим: `src/ai/mockMode.ts`, включение — `localStorage['studiobook_ai_mock_mode'] = 'true'`; диспетчеризация по `requestTags` (`step/focus/option/check/compose`), `focus` отдаёт вопрос раздела и шесть вариантов без префикса акта. Пулы ответов — по категории профиля (`plot_short`, `char_*`, `obj_*`, сцена, акт, событие): новый профиль обязан получить пул, иначе UI показывает чужие по смыслу ответы. Новый тег = новая ветка mock; `wizard:profiles` прогоняет mock-шаг каждого профиля.
 
 ## 9. Персист (`src/db/cardWizard.ts`)
 
@@ -169,12 +172,17 @@
 - `CardWizardHost` — связывает стор с деревом: «Применить в карточку» берёт свежий черновик, а если его нет или диалог изменился — сначала вызывает `compose()`, затем пишет текст по `applyMode`.
 - `CardWizardModal` — шапка (заголовок, арка, чип текущего акта «Акт N из M: <этап>» для `guided`, «Черновик устарел», чип «Нужно переделать: N», статус, отмена/применить/закрыть), тело: чат + панель структуры. Отдельной кнопки сборки нет: сборка — часть применения.
 - `CardWizardChat` — лента, подтверждения, панель проверки над полем ввода, состояния thinking/suggesting/composing/checking/error; `focusRequest` прокручивает ленту к сообщению и подсвечивает его кольцом (~2 с).
-- `CardWizardMessageRow` — варианты, правка/удаление варианта, свой вариант, правка своего ответа, бейдж «Нужно переделать»; реплика — плоский блок (фон + выравнивание, без рамки и аватара), ширина по содержимому.
+- `CardWizardMessageRow` — варианты, правка/удаление варианта, свой вариант, правка своего ответа, бейдж «Нужно переделать»; реплика — плоский блок (фон + выравнивание, без рамки и аватара): с вариантами ответа тянется на всю ленту, иначе ширина по содержимому.
+- `CardWizardOptionsBlock` — варианты ответа = карточки ширины чтения: `grow basis-[300px] max-w-[420px]`, равные в строке, текст переносится (45–60 знаков); правка/свой вариант — поле той же ширины (420 px). Меню разделов возвращается раньше карточек: вертикальный список (точка приоритета + рекомендация по разделу, `menuRecommendations`), чипы остались только у перехода по акту. Чип перехода (`CardWizardActAction`) блокируется, пока не собран минимум акта: `disabled` + видимая строка подсказки и `title` с пустыми разделами (`wizardActGateText`); данные гейта собирает модалка, решение принимает `isWizardActGateOpen`.
+- Метка приоритета — ЦВЕТНОЙ КРУЖОК вместо числа (прямое требование автора): зелёный = высший (отвечать первым), жёлтый = средний, серый = низший. Одна палитра (`emerald-400`/`amber-400`/`slate-500`) и одна подпись на оба места: у варианта ответа (`CardWizardOptionPriorityBadge`, 2.5 px) и в меню разделов (`CardWizardMenuPriorityDot`, 2 px). Числа 1/2/3 остаются только в данных и промптах; подписи/подсказки — `WIZARD_OPTION_PRIORITY_LABELS`/`_HINTS`, легенда — `ui.optionPriorityHint`. Новый текст метки о числах не упоминает.
 - `CardWizardCheckPanel` — отчёт: конфликты + причина, «Оставить как есть», «Инвалидировать и переспросить»; чистая строка «Проверка пройдена».
 - `CardWizardStructurePanel` — прогресс, арка, чек-лист слотов с −/＋, черновик; счётный слот раскрыт подпунктами: ОДИН элемент = ОДИН ряд (`listWizardSlotElements`), ряд из чата кликабелен → `onFocusElement(messageId)` → `focusRequest` в чате, ряд из предзаполнения проекта — только чтение.
-- Стиль UI (жёсткое требование автора): плоские ряды, ОДИН уровень вложенности на блок — никаких карточек в карточках, рамок внутри рамок и декоративных плашек; шаг отступов 2/4/6/8 px (`gap-1..2`, `px-2..3`, `py-1..2`), крупные `p-3/p-4` в Мастере запрещены.
+- Стиль UI (жёсткое требование автора): плоские ряды, ОДИН уровень вложенности на блок — никаких карточек в карточках, рамок внутри рамок и декоративных плашек; «карточка варианта» — это плоская плашка на фоне ленты (заливка + радиус, без `ring`/`border`); шаг отступов 2/4/6/8 px (`gap-1..2`, `px-2..3`, `py-1..2`), крупные `p-3/p-4` в Мастере запрещены.
+- Ширина чтения: длинный вариант не растягивается на всю ленту — карточка `basis-[300px] max-w-[420px]` с `grow`, поэтому строки укладываются в 45–60 знаков; `flex-1` вместе с `basis-[300px]` даёт `flex-basis:0%` и неровные карточки — только `grow` + `basis`.
 - Шрифт Мастера (требование читаемости): реплики диалога 13 px, варианты ответа 12.5 px, заголовки панели структуры 12.5 px, значения и подсказки 11.5 px, служебные подписи (статусы, чипы, номера) 10–11 px; шапка модалки 11.5–14 px. Меньше 10 px текст в Мастере не опускается.
 - Под вариантами футер «+ варианты · свой» показан у любого вопроса, где есть выбор: открытого (`active`) и уже отвеченного (`answered`) — у отвеченного он дополняет список для перевыбора; иконки правки/удаления — только у открытого.
+- Сортировка вариантов пересчитывается при КАЖДОМ добавлении (`addWizardOptions`): слитый список устойчиво упорядочивается по метке (`wizardOptionPriorityOrder`, метка 1 → `null` последним), новый вариант встаёт на своё место по приоритету, а не в хвост. Индексы вариантов при этом переезжают → `optionIndex` ответов ремаппится тем же проходом (текст на новом месте не совпал → привязка снимается). Меню навигации не пересортировывается: его порядок — данные профиля, а `menuKeys` параллельны пунктам. Без единой метки порядок не меняется (legacy-сессии).
+- Переключатель состояния реплики («показать варианты» ↔ «свернуть») — в правом нижнем углу реплики: свёрнутый вид — отдельная строка под вопросом с `justify-end`, развёрнутый — `ml-auto` последним элементом футера, без разделителя «·». Это переключатель вида, а не действие над вариантами: слева остаются «+ варианты · свой».
 - Подсказка «любой другой вариант заменит этот ответ» под вариантами НЕ выводится: перевыбор объясняется в диалоге подтверждения (`wizardRechooseConfirmText`) и в отчёте проверки, а не постоянной строкой в ленте.
 - Правило: компоненты получают данные и колбэки через props; прямых обращений к store/db нет.
 
@@ -183,15 +191,15 @@
 | Скрипт | Покрывает |
 | --- | --- |
 | `wizard:review` | перевыбор, факт-чек, конфликты, инвалидация, промпт проверки, mock |
-| `wizard:options` | правка/удаление/добавление вариантов, промпт порции, контракт 5–6 вариантов во всех профилях, блок «спрошено/отвечено» |
+| `wizard:options` | правка/удаление/добавление вариантов, промпт порции, контракт «не меньше 6» во всех профилях, отсутствие предела списка, блок «спрошено/отвечено» |
 | `wizard:elements` | поштучный сбор счётных слотов (на счётном профиле): прогресс с номером элемента, детерминированный вопрос, варианты по одному элементу, страховка факта, антиповтор вопроса и выжимка «спрошено → ответ»; гид по актам: акты из проекта/арки, интро с пропуском заполненного, меню и его ключи, выбор пункта, next-act/finish, факт из ответа, обрезка меню, mock-вопрос |
 | `wizard:dialogue` | усечение ветки, правка ответа, отмена, черновик |
-| `wizard:golden` | промпты, факты, прогресс, итоговый текст профиля `plot_short` vs baseline |
+| `wizard:golden` | промпты шага/сборки/вариантов/фокуса, меню и чип акта, факты, прогресс и итоговый текст `plot_short` vs baseline |
 | `wizard:scene-smoke` | профиль сцены |
-| `wizard:profiles` | все профили реестра: уникальность id/заголовков/тегов, матчинг своего узла и отсутствие перехвата чужого, ключи слотов и разделов, диапазоны счётчиков, сверка числа с карточкой (приоритет карточки, приоритет выбора автора, зажим диапазона), legacy-сессия без новых полей, подстановки промптов, локальный итог, UI-тексты |
+| `wizard:profiles` | все профили реестра: уникальность id/заголовков/тегов, матчинг своего узла и отсутствие перехвата чужого, ключи слотов и разделов, диапазоны счётчиков, сверка числа с карточкой, гейт минимума акта, legacy-сессия без новых полей, подстановки промптов, локальный итог, UI-тексты, mock-шаг (валидный JSON, 6+ уникальных вариантов) |
 
 - Механика: `esbuild --bundle` → node; алиасы `@/shared` и `@/db` → `stubs/`.
-- Baseline: `scripts/wizard-golden/baseline.plot-wizard.json`; менять только осознанно и указывать причину.
+- Baseline: `scripts/wizard-golden/baseline.card-wizard.json` (снимок `plot_short` через `capture.ts`); менять только осознанно и указывать причину. Legacy-модули `*/plotWizard` в golden не входят.
 - Новый тест: `*.ts` + `*-check.mjs` (esbuild + node) + npm-скрипт `wizard:<name>`.
 
 ## 12. Рецепты расширения

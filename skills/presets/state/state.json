@@ -2,10 +2,10 @@
   "version": 1,
   "name": "presets",
   "marker": "AUTO:PRESETS",
-  "syncedAt": "2026-11-22T11:26:47.861Z",
-  "note": "контракт навыка: второй набор настроений, нейтральные подписи палитры стали базовым правилом",
-  "commit": "",
-  "branch": "",
+  "syncedAt": "2026-11-23T15:38:14.629Z",
+  "note": "пресеты эпохи: XX век и современность до 20 заготовок",
+  "commit": "6f0080f",
+  "branch": "master",
   "modules": [
     "src/shared/templates/presets",
     "src/shared/templates/fields",
@@ -15,8 +15,8 @@
   ],
   "files": {
     "src/components/tree/section-card/SectionCardPresetPalette.tsx": {
-      "hash": "b0f176bda283",
-      "loc": 249
+      "hash": "970f79290a71",
+      "loc": 291
     },
     "src/components/tree/section-card/presetSearch.ts": {
       "hash": "4d9469f2262c",
@@ -27,16 +27,16 @@
       "loc": 107
     },
     "src/shared/templates/fields/characterFields.ts": {
-      "hash": "683715bbd821",
-      "loc": 138
+      "hash": "168f57095f14",
+      "loc": 150
     },
     "src/shared/templates/fields/eventFields.ts": {
       "hash": "9951f884ec9b",
       "loc": 36
     },
     "src/shared/templates/fields/generalFields.ts": {
-      "hash": "424cc7858085",
-      "loc": 93
+      "hash": "e67a31f7bc61",
+      "loc": 86
     },
     "src/shared/templates/fields/index.ts": {
       "hash": "3b1d3ce99331",
@@ -47,15 +47,99 @@
       "loc": 111
     },
     "src/shared/templates/fields/sceneFields.ts": {
-      "hash": "110db83a5ebc",
-      "loc": 127
+      "hash": "7bb61009ca6c",
+      "loc": 128
     },
     "src/shared/templates/fields/types.ts": {
       "hash": "35acbee7d80e",
       "loc": 10
     },
+    "src/shared/templates/presets/characterVisualStylePresets.ts": {
+      "hash": "19399b21352f",
+      "loc": 20
+    },
+    "src/shared/templates/presets/characterVisualStyles/costume.ts": {
+      "hash": "293a50e1f6c5",
+      "loc": 78
+    },
+    "src/shared/templates/presets/characterVisualStyles/face.ts": {
+      "hash": "b614f29a70c4",
+      "loc": 78
+    },
+    "src/shared/templates/presets/characterVisualStyles/index.ts": {
+      "hash": "a573ab5850c8",
+      "loc": 6
+    },
+    "src/shared/templates/presets/characterVisualStyles/presentation.ts": {
+      "hash": "6aad02e1f878",
+      "loc": 87
+    },
+    "src/shared/templates/presets/characterVisualStyles/proportions.ts": {
+      "hash": "64c086fb064e",
+      "loc": 69
+    },
+    "src/shared/templates/presets/characterVisualStyles/stylization.ts": {
+      "hash": "40604c8bfa8a",
+      "loc": 69
+    },
+    "src/shared/templates/presets/characterWritingStylePresets.ts": {
+      "hash": "6744f78429c8",
+      "loc": 19
+    },
+    "src/shared/templates/presets/characterWritingStyles/index.ts": {
+      "hash": "8cfa719fd41c",
+      "loc": 5
+    },
+    "src/shared/templates/presets/characterWritingStyles/innerVoice.ts": {
+      "hash": "0a858b6df24a",
+      "loc": 69
+    },
+    "src/shared/templates/presets/characterWritingStyles/lexis.ts": {
+      "hash": "911c92850b11",
+      "loc": 78
+    },
+    "src/shared/templates/presets/characterWritingStyles/mask.ts": {
+      "hash": "b8d8185984da",
+      "loc": 78
+    },
+    "src/shared/templates/presets/characterWritingStyles/presentation.ts": {
+      "hash": "685994dfc407",
+      "loc": 87
+    },
+    "src/shared/templates/presets/characterWritingStyles/speech.ts": {
+      "hash": "943578265fff",
+      "loc": 105
+    },
+    "src/shared/templates/presets/eraPresets.ts": {
+      "hash": "d8d27a9a3b49",
+      "loc": 19
+    },
+    "src/shared/templates/presets/eras/ancient.ts": {
+      "hash": "4c76a117ad49",
+      "loc": 86
+    },
+    "src/shared/templates/presets/eras/contemporary.ts": {
+      "hash": "ca97d33dfe48",
+      "loc": 186
+    },
+    "src/shared/templates/presets/eras/index.ts": {
+      "hash": "639c8daa5323",
+      "loc": 6
+    },
+    "src/shared/templates/presets/eras/middle.ts": {
+      "hash": "ac51f7f723ef",
+      "loc": 86
+    },
+    "src/shared/templates/presets/eras/modern.ts": {
+      "hash": "53cab4cf7d1b",
+      "loc": 86
+    },
+    "src/shared/templates/presets/eras/speculative.ts": {
+      "hash": "cf2646e82575",
+      "loc": 113
+    },
     "src/shared/templates/presets/genrePresets.ts": {
-      "hash": "6c1bc705e803",
+      "hash": "1b1d8892bece",
       "loc": 25
     },
     "src/shared/templates/presets/genres/adventure.ts": {
@@ -95,36 +179,100 @@
       "loc": 96
     },
     "src/shared/templates/presets/index.ts": {
-      "hash": "70e3dfca3da3",
-      "loc": 35
+      "hash": "735ad1542e5c",
+      "loc": 73
     },
     "src/shared/templates/presets/moodPresets.ts": {
-      "hash": "ba7aa1c736b2",
+      "hash": "6bb57b73b1da",
       "loc": 17
     },
     "src/shared/templates/presets/moods/atmosphere.ts": {
-      "hash": "bd9da99e0dbd",
+      "hash": "fed0f1ee9009",
       "loc": 77
     },
     "src/shared/templates/presets/moods/index.ts": {
-      "hash": "4af64411cbbc",
+      "hash": "018889c6141b",
       "loc": 5
     },
     "src/shared/templates/presets/moods/narration.ts": {
-      "hash": "edc74293f9d1",
+      "hash": "8eb4e4177a3e",
       "loc": 77
     },
     "src/shared/templates/presets/moods/pace.ts": {
-      "hash": "ee305ddd09af",
+      "hash": "f74bc907f9f4",
       "loc": 59
     },
     "src/shared/templates/presets/moods/tone.ts": {
-      "hash": "577c98543e4d",
+      "hash": "9d2fb980b624",
       "loc": 95
     },
     "src/shared/templates/presets/types.ts": {
-      "hash": "b489787a9892",
-      "loc": 31
+      "hash": "ba0b626e4897",
+      "loc": 33
+    },
+    "src/shared/templates/presets/visualStylePresets.ts": {
+      "hash": "b585ade72e11",
+      "loc": 26
+    },
+    "src/shared/templates/presets/visualStyles/camera.ts": {
+      "hash": "bc25dfb86d04",
+      "loc": 87
+    },
+    "src/shared/templates/presets/visualStyles/comics.ts": {
+      "hash": "a1507e37555e",
+      "loc": 96
+    },
+    "src/shared/templates/presets/visualStyles/heritage.ts": {
+      "hash": "e07821fa32b8",
+      "loc": 78
+    },
+    "src/shared/templates/presets/visualStyles/index.ts": {
+      "hash": "b9dde57874ac",
+      "loc": 9
+    },
+    "src/shared/templates/presets/visualStyles/light.ts": {
+      "hash": "1ba862795904",
+      "loc": 132
+    },
+    "src/shared/templates/presets/visualStyles/optics.ts": {
+      "hash": "06dc1440c0b3",
+      "loc": 114
+    },
+    "src/shared/templates/presets/visualStyles/palette.ts": {
+      "hash": "43650b4d1295",
+      "loc": 141
+    },
+    "src/shared/templates/presets/visualStyles/stylization.ts": {
+      "hash": "e45ebcd21bfe",
+      "loc": 150
+    },
+    "src/shared/templates/presets/visualStyles/techniques.ts": {
+      "hash": "e025f34f653b",
+      "loc": 177
+    },
+    "src/shared/templates/presets/writingStylePresets.ts": {
+      "hash": "cac848232c37",
+      "loc": 20
+    },
+    "src/shared/templates/presets/writingStyles/authors.ts": {
+      "hash": "d4b26fa475b2",
+      "loc": 132
+    },
+    "src/shared/templates/presets/writingStyles/humor.ts": {
+      "hash": "e2b372ece4f5",
+      "loc": 96
+    },
+    "src/shared/templates/presets/writingStyles/index.ts": {
+      "hash": "17310589ac14",
+      "loc": 5
+    },
+    "src/shared/templates/presets/writingStyles/manner.ts": {
+      "hash": "014ede4f68a3",
+      "loc": 150
+    },
+    "src/shared/templates/presets/writingStyles/sensory.ts": {
+      "hash": "92da4a0fe0c7",
+      "loc": 114
     }
   }
 }
