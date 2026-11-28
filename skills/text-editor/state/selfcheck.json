@@ -1,0 +1,428 @@
+{
+  "version": 1,
+  "lastSyncAt": "2026-11-28T10:54:26.114Z",
+  "lastChangeAt": "2026-11-28T10:54:26.114Z",
+  "lastDelta": {
+    "added": 0,
+    "removed": 0,
+    "changed": 5
+  },
+  "factsHash": "3d9ee73ea709ab11244e59482d69501ccd9fe8db",
+  "snapshot": {
+    "files": {
+      "src/components/editor/document/blocks/BlockCell.tsx": "2fdccebfa604",
+      "src/components/editor/document/blocks/BlockHeightResizeHandle.tsx": "9425d15c46f4",
+      "src/components/editor/document/blocks/BlockList.tsx": "f9675bc93818",
+      "src/components/editor/document/blocks/BlockPlaceholder.tsx": "5f42448d4fff",
+      "src/components/editor/document/blocks/BlockRenderer.tsx": "87f9b2ed18fb",
+      "src/components/editor/document/blocks/BlockResizeHandle.tsx": "60914d7a0cf8",
+      "src/components/editor/document/blocks/BlockToolbar.tsx": "b87c5dd86889",
+      "src/components/editor/document/blocks/ContainerBlock.tsx": "8fbc03b6f260",
+      "src/components/editor/document/blocks/ContainerDropZone.tsx": "8734c9fc0eda",
+      "src/components/editor/document/blocks/ContainerLayoutControls.tsx": "9e987f648252",
+      "src/components/editor/document/blocks/documentBlocksContext.tsx": "541c64ce873f",
+      "src/components/editor/document/blocks/ImageBlock.tsx": "4f1c4ca6f86c",
+      "src/components/editor/document/blocks/ImageBlockActions.tsx": "c34aaedf8c0f",
+      "src/components/editor/document/blocks/ImageBlockLightbox.tsx": "fa41164c35db",
+      "src/components/editor/document/blocks/ImageCaption.tsx": "5d154556b341",
+      "src/components/editor/document/blocks/ImageCropOverlay.tsx": "66f1924ae5cf",
+      "src/components/editor/document/blocks/SourceBadge.tsx": "cb48be33b139",
+      "src/components/editor/document/blocks/sourceState.ts": "c8015c4dc9f8",
+      "src/components/editor/document/blocks/TextBlock.tsx": "92e4d3563b12",
+      "src/components/editor/document/blocks/TextBlockEditor.tsx": "ec5bd67a6dcd",
+      "src/components/editor/document/build/buildDocumentFromTree.ts": "aafd4664102d",
+      "src/components/editor/document/build/useBuildFromTree.ts": "f75fe34ca76c",
+      "src/components/editor/document/DocumentEditorModal.tsx": "7f32979dc2d1",
+      "src/components/editor/document/export/cropImageSource.ts": "7214edbd2de5",
+      "src/components/editor/document/export/documentOutline.ts": "2e21fec705d7",
+      "src/components/editor/document/export/exportFileName.ts": "dac6614f5869",
+      "src/components/editor/document/export/exportFormat.ts": "e00e5921e8dd",
+      "src/components/editor/document/export/exportHtml.ts": "88ec14291c67",
+      "src/components/editor/document/export/exportMarkdown.ts": "ebef7400e7b5",
+      "src/components/editor/document/export/htmlEscape.ts": "aa5cc81c3bd4",
+      "src/components/editor/document/export/markdownToHtml.ts": "6145dc573d59",
+      "src/components/editor/document/export/useDocumentExport.ts": "11801fb12605",
+      "src/components/editor/document/footer/DocumentFooter.tsx": "b639ce72324b",
+      "src/components/editor/document/header/AddBlockMenu.tsx": "22adfabccb01",
+      "src/components/editor/document/header/DocumentHeader.tsx": "690775a9f026",
+      "src/components/editor/document/header/DocumentSettingsModal.tsx": "7d7b1bd7de76",
+      "src/components/editor/document/header/ExportMenu.tsx": "47cb7844b2ba",
+      "src/components/editor/document/header/usePopoverDismiss.ts": "e85caa386368",
+      "src/components/editor/document/hooks/documentDropGeometry.ts": "0b66731009fc",
+      "src/components/editor/document/hooks/documentTreeOps.ts": "8ece2891b30d",
+      "src/components/editor/document/hooks/useBlockDrag.ts": "981ad6207549",
+      "src/components/editor/document/hooks/useBlockResize.ts": "978d6ab2e0fd",
+      "src/components/editor/document/hooks/useContainerHeightResize.ts": "49f4b2e2ea05",
+      "src/components/editor/document/hooks/useDocumentAutosave.ts": "c2f3ac1739fe",
+      "src/components/editor/document/hooks/useDocumentEditor/blockPatches.ts": "2e996d04f78b",
+      "src/components/editor/document/hooks/useDocumentEditor/index.ts": "86ac151ed623",
+      "src/components/editor/document/hooks/useDocumentEditor/types.ts": "d8594838e9c5",
+      "src/components/editor/document/hooks/useDocumentEditor/useDocumentEditor.ts": "c9b64d4584a3",
+      "src/components/editor/document/hooks/useDocumentHistory.ts": "4698f5cc18d2",
+      "src/components/editor/document/hooks/useDocumentHotkeys.ts": "1e1409d5355b",
+      "src/components/editor/document/hooks/useDocumentImageEditor.ts": "2ebb2b46ea5c",
+      "src/components/editor/document/hooks/useDocumentMetrics.ts": "4345fccbff7f",
+      "src/components/editor/document/hooks/useFillPanelResize.ts": "7e2b2f212a00",
+      "src/components/editor/document/hooks/useFloatingPlateAnchor.ts": "b926bc3d0d56",
+      "src/components/editor/document/hooks/useImageAspect.ts": "ce534e38579d",
+      "src/components/editor/document/hooks/useImageCropEdit.ts": "50c13ca76755",
+      "src/components/editor/document/hooks/useImageWidthResize.ts": "7953c766ab63",
+      "src/components/editor/document/index.ts": "d23eebef3054",
+      "src/components/editor/document/sources/documentSources.ts": "78669a7d6333",
+      "src/components/editor/document/sources/sourceDrag.ts": "4756de4d5d63",
+      "src/components/editor/document/sources/SourceImageRow.tsx": "a14d142e0d5c",
+      "src/components/editor/document/sources/SourcesPanel.tsx": "019859c4087f",
+      "src/components/editor/document/sources/SourcesTree.tsx": "941c2df6d48f",
+      "src/components/editor/document/sources/SourceTextRow.tsx": "c2a01c76f5e0",
+      "src/components/editor/document/sources/sourceTypes.ts": "e2d52a98f82b",
+      "src/components/editor/document/sources/useDocumentSources.ts": "1473d496dbe3",
+      "src/components/editor/document/sources/useSourceDrop.ts": "724a9018601f",
+      "src/components/editor/document/sources/useSourceInsert.ts": "fdc442fa7bc8",
+      "src/components/editor/document/sources/useSourcePanelResize.ts": "bff0be0fcded",
+      "src/db/document.ts": "df17a0733081",
+      "src/shared/document/index.ts": "e68a82cedf24",
+      "src/shared/document/layout/blockConstraints.ts": "84ad4978e4bf",
+      "src/shared/document/layout/imageCrop.ts": "857f4ebce836",
+      "src/shared/document/layout/packDocumentRows.ts": "7fc621cc8464",
+      "src/shared/document/layout/packFillMosaic.ts": "d6b7f85b1f31",
+      "src/shared/document/schema.ts": "ce67abf1de57",
+      "src/shared/document/sourceHash.ts": "97704503c1e3",
+      "src/shared/document/types.ts": "f995c7f64229",
+      "src/store/useDocumentStore.ts": "d92135f7f9ec"
+    },
+    "constants": {
+      "DOCUMENT_AUTOSAVE_DELAY_MS": "2500",
+      "BLOCK_COLS": "12",
+      "MAX_CONTAINER_DEPTH": "5",
+      "MIN_CONTAINER_SPAN": "3",
+      "DEFAULT_SOURCES_PANEL_WIDTH": "320",
+      "SOURCES_PANEL_MIN_WIDTH": "240",
+      "SOURCES_PANEL_MAX_WIDTH": "720",
+      "IMAGE_WIDTH_MIN": "10",
+      "IMAGE_WIDTH_MAX": "100",
+      "DEFAULT_IMAGE_WIDTH": "100",
+      "IMAGE_CROP_MAX": "45",
+      "DEFAULT_CONTAINER_HEIGHT": "60",
+      "CONTAINER_HEIGHT_MIN": "15",
+      "CONTAINER_HEIGHT_MAX": "250",
+      "FILL_CROP_TOLERANCE": "0.15",
+      "FILL_MIN_PANEL_WIDTH": "8",
+      "FILL_PANEL_WIDTH_MIN": "FILL_MIN_PANEL_WIDTH",
+      "FILL_PANEL_WIDTH_MAX": "100",
+      "FILL_PANEL_HEIGHT_MIN": "5",
+      "FILL_PANEL_HEIGHT_MAX": "100",
+      "DEFAULT_FILL_PANEL_WIDTH": "100",
+      "DEFAULT_FILL_PANEL_HEIGHT": "50",
+      "FILL_FALLBACK_RATIO": "1.5",
+      "FILL_TEXT_RATIO": "2",
+      "FILL_CONTAINER_RATIO": "1.6",
+      "DOCUMENT_HISTORY_LIMIT": "50"
+    },
+    "unions": {
+      "DocumentExportFormat": "'md'|'html'",
+      "BlockKind": "'text'|'image'|'container'",
+      "BlockAlign": "'left'|'center'|'right'|'stretch'",
+      "DocumentWidth": "'narrow'|'medium'|'wide'",
+      "ContainerDepth": "1|2|3|4|5",
+      "BlockLevel": "0|ContainerDepth",
+      "DocumentSaveStatus": "'saved'|'saving'|'error'"
+    },
+    "rpc": [
+      "documentGet",
+      "documentSave",
+      "documentReset"
+    ],
+    "tables": {
+      "projects": "id,title,genre,logline,setting_rules,created_at,updated_at",
+      "nodes": "id,project_id,parent_id,type,order_index,title,content,description,requirements,example,options_json,stale_context,updated_at",
+      "entities": "id,project_id,type,name,description,visual_traits,updated_at",
+      "node_entity_links": "node_id,entity_id,role",
+      "generations": "id,node_id,entity_id,model,provider,seed,temperature,system_prompt,prompt_rendered,context_snapshot_json,result_text,asset_id,created_at",
+      "assets": "id,node_id,entity_id,file_name,mime_type,generation_id,created_at,data_url,project_json",
+      "settings": "key,value",
+      "ai_models": "id,provider,type,name,description,context_window,input_price_per_m,output_price_per_m,speed_tokens_per_sec,speed_rating,is_popular,is_batch,updated_at",
+      "ai_batches": "id,node_id,field_key,provider,model,status,created_at,updated_at,error_message,system_prompt,user_prompt,seed,temperature",
+      "operation_log": "id,project_id,action_type,description,undo_payload,redo_payload,is_undone,created_at",
+      "card_wizard_sessions": "profile_id,node_id,project_id,state_json,updated_at",
+      "documents": "id,project_id,title,blocks_json,updated_at",
+      "plot_wizard_sessions": "node_id,project_id,state_json,updated_at"
+    },
+    "factsHash": "3d9ee73ea709ab11244e59482d69501ccd9fe8db"
+  },
+  "history": [
+    {
+      "at": "2026-11-27T16:51:57.206Z",
+      "failed": [],
+      "regions": [
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 2
+      },
+      "lastChangeAt": "2026-11-27T16:51:57.206Z"
+    },
+    {
+      "at": "2026-11-27T17:26:04.500Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "DATA",
+        "API",
+        "CHECKS",
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 4,
+        "changed": 29
+      },
+      "lastChangeAt": "2026-11-27T17:26:04.500Z"
+    },
+    {
+      "at": "2026-11-27T17:30:55.771Z",
+      "failed": [],
+      "regions": [],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 0
+      },
+      "lastChangeAt": "2026-11-27T17:26:04.500Z"
+    },
+    {
+      "at": "2026-11-27T17:52:13.787Z",
+      "failed": [],
+      "regions": [
+        "STATE"
+      ],
+      "files": {
+        "added": 4,
+        "removed": 0,
+        "changed": 29
+      },
+      "lastChangeAt": "2026-11-27T17:52:13.787Z"
+    },
+    {
+      "at": "2026-11-27T18:16:34.476Z",
+      "failed": [],
+      "regions": [
+        "DATA",
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 9
+      },
+      "lastChangeAt": "2026-11-27T18:16:34.476Z"
+    },
+    {
+      "at": "2026-11-27T18:43:20.206Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "DATA",
+        "API",
+        "STATE"
+      ],
+      "files": {
+        "added": 1,
+        "removed": 0,
+        "changed": 6
+      },
+      "lastChangeAt": "2026-11-27T18:43:20.206Z"
+    },
+    {
+      "at": "2026-11-28T08:17:51.753Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 3
+      },
+      "lastChangeAt": "2026-11-28T08:17:51.753Z"
+    },
+    {
+      "at": "2026-11-28T08:54:37.050Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "DATA",
+        "API",
+        "STATE"
+      ],
+      "files": {
+        "added": 3,
+        "removed": 0,
+        "changed": 17
+      },
+      "lastChangeAt": "2026-11-28T08:54:37.050Z"
+    },
+    {
+      "at": "2026-11-28T09:00:01.207Z",
+      "failed": [],
+      "regions": [
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 6
+      },
+      "lastChangeAt": "2026-11-28T09:00:01.207Z"
+    },
+    {
+      "at": "2026-11-28T09:21:29.877Z",
+      "failed": [],
+      "regions": [],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 0
+      },
+      "lastChangeAt": "2026-11-28T09:00:01.207Z"
+    },
+    {
+      "at": "2026-11-28T09:35:49.105Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "DATA",
+        "API",
+        "STATE"
+      ],
+      "files": {
+        "added": 6,
+        "removed": 0,
+        "changed": 13
+      },
+      "lastChangeAt": "2026-11-28T09:35:49.105Z"
+    },
+    {
+      "at": "2026-11-28T09:39:19.377Z",
+      "failed": [],
+      "regions": [
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 1
+      },
+      "lastChangeAt": "2026-11-28T09:39:19.377Z"
+    },
+    {
+      "at": "2026-11-28T09:40:11.756Z",
+      "failed": [],
+      "regions": [
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 2
+      },
+      "lastChangeAt": "2026-11-28T09:40:11.756Z"
+    },
+    {
+      "at": "2026-11-28T09:40:45.309Z",
+      "failed": [],
+      "regions": [],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 2
+      },
+      "lastChangeAt": "2026-11-28T09:40:45.309Z"
+    },
+    {
+      "at": "2026-11-28T09:44:31.932Z",
+      "failed": [],
+      "regions": [],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 0
+      },
+      "lastChangeAt": "2026-11-28T09:40:45.309Z"
+    },
+    {
+      "at": "2026-11-28T09:54:01.835Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "API",
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 1,
+        "changed": 12
+      },
+      "lastChangeAt": "2026-11-28T09:54:01.835Z"
+    },
+    {
+      "at": "2026-11-28T10:46:08.506Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "DATA",
+        "API",
+        "STATE"
+      ],
+      "files": {
+        "added": 2,
+        "removed": 0,
+        "changed": 11
+      },
+      "lastChangeAt": "2026-11-28T10:46:08.506Z"
+    },
+    {
+      "at": "2026-11-28T10:47:54.166Z",
+      "failed": [],
+      "regions": [
+        "BASE",
+        "API",
+        "STATE"
+      ],
+      "files": {
+        "added": 1,
+        "removed": 0,
+        "changed": 1
+      },
+      "lastChangeAt": "2026-11-28T10:47:54.166Z"
+    },
+    {
+      "at": "2026-11-28T10:51:07.807Z",
+      "failed": [],
+      "regions": [
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 5
+      },
+      "lastChangeAt": "2026-11-28T10:51:07.807Z"
+    },
+    {
+      "at": "2026-11-28T10:54:26.114Z",
+      "failed": [],
+      "regions": [
+        "STATE"
+      ],
+      "files": {
+        "added": 0,
+        "removed": 0,
+        "changed": 5
+      },
+      "lastChangeAt": "2026-11-28T10:54:26.114Z"
+    }
+  ]
+}

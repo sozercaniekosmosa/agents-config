@@ -1,0 +1,333 @@
+{
+  "version": 1,
+  "name": "text-editor",
+  "marker": "AUTO:TEXT_EDITOR",
+  "syncedAt": "2026-11-28T10:54:42.803Z",
+  "note": "Высота frame вынесена в контекст блока: ручка панели в единственной полосе правит heightPercent контейнера; ручка высоты больше не скрыта",
+  "commit": "",
+  "branch": "",
+  "modules": [
+    "src/shared/document",
+    "src/components/editor/document",
+    "src/store/useDocumentStore.ts",
+    "src/db/document.ts"
+  ],
+  "files": {
+    "src/components/editor/document/DocumentEditorModal.tsx": {
+      "hash": "7f32979dc2d1",
+      "loc": 297
+    },
+    "src/components/editor/document/blocks/BlockCell.tsx": {
+      "hash": "2fdccebfa604",
+      "loc": 262
+    },
+    "src/components/editor/document/blocks/BlockHeightResizeHandle.tsx": {
+      "hash": "9425d15c46f4",
+      "loc": 37
+    },
+    "src/components/editor/document/blocks/BlockList.tsx": {
+      "hash": "f9675bc93818",
+      "loc": 307
+    },
+    "src/components/editor/document/blocks/BlockPlaceholder.tsx": {
+      "hash": "5f42448d4fff",
+      "loc": 30
+    },
+    "src/components/editor/document/blocks/BlockRenderer.tsx": {
+      "hash": "87f9b2ed18fb",
+      "loc": 68
+    },
+    "src/components/editor/document/blocks/BlockResizeHandle.tsx": {
+      "hash": "60914d7a0cf8",
+      "loc": 33
+    },
+    "src/components/editor/document/blocks/BlockToolbar.tsx": {
+      "hash": "b87c5dd86889",
+      "loc": 147
+    },
+    "src/components/editor/document/blocks/ContainerBlock.tsx": {
+      "hash": "8fbc03b6f260",
+      "loc": 238
+    },
+    "src/components/editor/document/blocks/ContainerDropZone.tsx": {
+      "hash": "8734c9fc0eda",
+      "loc": 60
+    },
+    "src/components/editor/document/blocks/ContainerLayoutControls.tsx": {
+      "hash": "9e987f648252",
+      "loc": 184
+    },
+    "src/components/editor/document/blocks/ImageBlock.tsx": {
+      "hash": "4f1c4ca6f86c",
+      "loc": 498
+    },
+    "src/components/editor/document/blocks/ImageBlockActions.tsx": {
+      "hash": "c34aaedf8c0f",
+      "loc": 77
+    },
+    "src/components/editor/document/blocks/ImageBlockLightbox.tsx": {
+      "hash": "fa41164c35db",
+      "loc": 48
+    },
+    "src/components/editor/document/blocks/ImageCaption.tsx": {
+      "hash": "5d154556b341",
+      "loc": 114
+    },
+    "src/components/editor/document/blocks/ImageCropOverlay.tsx": {
+      "hash": "66f1924ae5cf",
+      "loc": 220
+    },
+    "src/components/editor/document/blocks/SourceBadge.tsx": {
+      "hash": "cb48be33b139",
+      "loc": 103
+    },
+    "src/components/editor/document/blocks/TextBlock.tsx": {
+      "hash": "92e4d3563b12",
+      "loc": 140
+    },
+    "src/components/editor/document/blocks/TextBlockEditor.tsx": {
+      "hash": "ec5bd67a6dcd",
+      "loc": 225
+    },
+    "src/components/editor/document/blocks/documentBlocksContext.tsx": {
+      "hash": "541c64ce873f",
+      "loc": 61
+    },
+    "src/components/editor/document/blocks/sourceState.ts": {
+      "hash": "c8015c4dc9f8",
+      "loc": 40
+    },
+    "src/components/editor/document/build/buildDocumentFromTree.ts": {
+      "hash": "aafd4664102d",
+      "loc": 180
+    },
+    "src/components/editor/document/build/useBuildFromTree.ts": {
+      "hash": "f75fe34ca76c",
+      "loc": 71
+    },
+    "src/components/editor/document/export/cropImageSource.ts": {
+      "hash": "7214edbd2de5",
+      "loc": 94
+    },
+    "src/components/editor/document/export/documentOutline.ts": {
+      "hash": "2e21fec705d7",
+      "loc": 65
+    },
+    "src/components/editor/document/export/exportFileName.ts": {
+      "hash": "dac6614f5869",
+      "loc": 63
+    },
+    "src/components/editor/document/export/exportFormat.ts": {
+      "hash": "e00e5921e8dd",
+      "loc": 3
+    },
+    "src/components/editor/document/export/exportHtml.ts": {
+      "hash": "88ec14291c67",
+      "loc": 151
+    },
+    "src/components/editor/document/export/exportMarkdown.ts": {
+      "hash": "ebef7400e7b5",
+      "loc": 148
+    },
+    "src/components/editor/document/export/htmlEscape.ts": {
+      "hash": "aa5cc81c3bd4",
+      "loc": 16
+    },
+    "src/components/editor/document/export/markdownToHtml.ts": {
+      "hash": "6145dc573d59",
+      "loc": 78
+    },
+    "src/components/editor/document/export/useDocumentExport.ts": {
+      "hash": "11801fb12605",
+      "loc": 68
+    },
+    "src/components/editor/document/footer/DocumentFooter.tsx": {
+      "hash": "b639ce72324b",
+      "loc": 95
+    },
+    "src/components/editor/document/header/AddBlockMenu.tsx": {
+      "hash": "22adfabccb01",
+      "loc": 84
+    },
+    "src/components/editor/document/header/DocumentHeader.tsx": {
+      "hash": "690775a9f026",
+      "loc": 189
+    },
+    "src/components/editor/document/header/DocumentSettingsModal.tsx": {
+      "hash": "7d7b1bd7de76",
+      "loc": 102
+    },
+    "src/components/editor/document/header/ExportMenu.tsx": {
+      "hash": "47cb7844b2ba",
+      "loc": 69
+    },
+    "src/components/editor/document/header/usePopoverDismiss.ts": {
+      "hash": "e85caa386368",
+      "loc": 53
+    },
+    "src/components/editor/document/hooks/documentDropGeometry.ts": {
+      "hash": "0b66731009fc",
+      "loc": 114
+    },
+    "src/components/editor/document/hooks/documentTreeOps.ts": {
+      "hash": "8ece2891b30d",
+      "loc": 358
+    },
+    "src/components/editor/document/hooks/useBlockDrag.ts": {
+      "hash": "981ad6207549",
+      "loc": 168
+    },
+    "src/components/editor/document/hooks/useBlockResize.ts": {
+      "hash": "978d6ab2e0fd",
+      "loc": 171
+    },
+    "src/components/editor/document/hooks/useContainerHeightResize.ts": {
+      "hash": "49f4b2e2ea05",
+      "loc": 110
+    },
+    "src/components/editor/document/hooks/useDocumentAutosave.ts": {
+      "hash": "c2f3ac1739fe",
+      "loc": 27
+    },
+    "src/components/editor/document/hooks/useDocumentEditor/blockPatches.ts": {
+      "hash": "2e996d04f78b",
+      "loc": 168
+    },
+    "src/components/editor/document/hooks/useDocumentEditor/index.ts": {
+      "hash": "86ac151ed623",
+      "loc": 5
+    },
+    "src/components/editor/document/hooks/useDocumentEditor/types.ts": {
+      "hash": "d8594838e9c5",
+      "loc": 108
+    },
+    "src/components/editor/document/hooks/useDocumentEditor/useDocumentEditor.ts": {
+      "hash": "c9b64d4584a3",
+      "loc": 339
+    },
+    "src/components/editor/document/hooks/useDocumentHistory.ts": {
+      "hash": "4698f5cc18d2",
+      "loc": 30
+    },
+    "src/components/editor/document/hooks/useDocumentHotkeys.ts": {
+      "hash": "1e1409d5355b",
+      "loc": 95
+    },
+    "src/components/editor/document/hooks/useDocumentImageEditor.ts": {
+      "hash": "2ebb2b46ea5c",
+      "loc": 188
+    },
+    "src/components/editor/document/hooks/useDocumentMetrics.ts": {
+      "hash": "4345fccbff7f",
+      "loc": 99
+    },
+    "src/components/editor/document/hooks/useFillPanelResize.ts": {
+      "hash": "7e2b2f212a00",
+      "loc": 181
+    },
+    "src/components/editor/document/hooks/useFloatingPlateAnchor.ts": {
+      "hash": "b926bc3d0d56",
+      "loc": 82
+    },
+    "src/components/editor/document/hooks/useImageAspect.ts": {
+      "hash": "ce534e38579d",
+      "loc": 81
+    },
+    "src/components/editor/document/hooks/useImageCropEdit.ts": {
+      "hash": "50c13ca76755",
+      "loc": 173
+    },
+    "src/components/editor/document/hooks/useImageWidthResize.ts": {
+      "hash": "7953c766ab63",
+      "loc": 113
+    },
+    "src/components/editor/document/index.ts": {
+      "hash": "d23eebef3054",
+      "loc": 68
+    },
+    "src/components/editor/document/sources/SourceImageRow.tsx": {
+      "hash": "a14d142e0d5c",
+      "loc": 77
+    },
+    "src/components/editor/document/sources/SourceTextRow.tsx": {
+      "hash": "c2a01c76f5e0",
+      "loc": 70
+    },
+    "src/components/editor/document/sources/SourcesPanel.tsx": {
+      "hash": "019859c4087f",
+      "loc": 192
+    },
+    "src/components/editor/document/sources/SourcesTree.tsx": {
+      "hash": "941c2df6d48f",
+      "loc": 250
+    },
+    "src/components/editor/document/sources/documentSources.ts": {
+      "hash": "78669a7d6333",
+      "loc": 282
+    },
+    "src/components/editor/document/sources/sourceDrag.ts": {
+      "hash": "4756de4d5d63",
+      "loc": 64
+    },
+    "src/components/editor/document/sources/sourceTypes.ts": {
+      "hash": "e2d52a98f82b",
+      "loc": 67
+    },
+    "src/components/editor/document/sources/useDocumentSources.ts": {
+      "hash": "1473d496dbe3",
+      "loc": 36
+    },
+    "src/components/editor/document/sources/useSourceDrop.ts": {
+      "hash": "724a9018601f",
+      "loc": 159
+    },
+    "src/components/editor/document/sources/useSourceInsert.ts": {
+      "hash": "fdc442fa7bc8",
+      "loc": 72
+    },
+    "src/components/editor/document/sources/useSourcePanelResize.ts": {
+      "hash": "bff0be0fcded",
+      "loc": 83
+    },
+    "src/db/document.ts": {
+      "hash": "df17a0733081",
+      "loc": 58
+    },
+    "src/shared/document/index.ts": {
+      "hash": "e68a82cedf24",
+      "loc": 8
+    },
+    "src/shared/document/layout/blockConstraints.ts": {
+      "hash": "84ad4978e4bf",
+      "loc": 209
+    },
+    "src/shared/document/layout/imageCrop.ts": {
+      "hash": "857f4ebce836",
+      "loc": 142
+    },
+    "src/shared/document/layout/packDocumentRows.ts": {
+      "hash": "7fc621cc8464",
+      "loc": 107
+    },
+    "src/shared/document/layout/packFillMosaic.ts": {
+      "hash": "d6b7f85b1f31",
+      "loc": 372
+    },
+    "src/shared/document/schema.ts": {
+      "hash": "ce67abf1de57",
+      "loc": 278
+    },
+    "src/shared/document/sourceHash.ts": {
+      "hash": "97704503c1e3",
+      "loc": 24
+    },
+    "src/shared/document/types.ts": {
+      "hash": "f995c7f64229",
+      "loc": 273
+    },
+    "src/store/useDocumentStore.ts": {
+      "hash": "d92135f7f9ec",
+      "loc": 202
+    }
+  }
+}

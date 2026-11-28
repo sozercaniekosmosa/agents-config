@@ -73,6 +73,7 @@
 10. **Tech Debt**: No `// TODO` in code → registered in [docs/techdebt.md](docs/techdebt.md)?
 11. **Feedback Loop**: Skill specs (.agents/skills/*/SKILL.md) aligned with code changes / user feedback?
 12. **Observer**: Request logged via `observer.cjs --record` & audit thresholds evaluated?
+13. **Hygiene**: backups/snapshots/replaced state → `.trash/`, not `.tmp/`, not the project root?
 
 ---
 
@@ -113,7 +114,8 @@
 ## 🛡️ Data Security & Version Control
 
 1. **Version Control**: Git is recommended, not mandatory: a project may run without a local repository when history lives elsewhere (remote, archive) or the repo was intentionally dropped. Missing local version control is a recorded risk, not a silent default → note it in `docs/techdebt.md` with the rollback plan.
-2. **Backup Before Deletion**: Before deleting files/dirs → keep a recoverable copy: a commit in version control, or an archive outside the working tree. Irreversible deletion of unversioned data → only after explicit user confirmation.
+2. **Backup Before Deletion**: Before deleting files/dirs → keep a recoverable copy: a commit in version control, or an archive in `.trash/<what>-<YYYYMMDD-HHMMSS>/`. Irreversible deletion of unversioned data → only after explicit user confirmation.
+3. **Working Dirs (scratch vs trash)**: `.tmp/` → artifacts of one run only (bundles, reports, TASK queues). Backups, pre-rollback snapshots, replaced files/dirs and one-off check artifacts → `.trash/`, never the project root. Both dirs are git-ignored and watcher-ignored; `.trash/` is never auto-cleaned (class `D` → escalation). Moving a backup → update every doc that references its path.
 
 ---
 
