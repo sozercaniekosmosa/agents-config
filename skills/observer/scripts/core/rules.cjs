@@ -23,7 +23,11 @@ function scanHooksOrder(filePath, content) {
 
     // Detect React component or Custom Hook definition
     if (!insideComponent) {
-      const compMatch = line.match(/(?:function\s+([A-Z][a-zA-Z0-9]+|use[A-Z][a-zA-Z0-9]+)|const\s+([A-Z][a-zA-Z0-9]+|use[A-Z][a-zA-Z0-9]+)\s*=\s*(?:React\.)?(?:memo\()?\(?)/);
+      // Имя компонента — PascalCase (обязательно содержит строчную букву: SCREAMING_SNAKE
+      // вроде NOOP — это константа, а не компонент), хук — строго useXxx.
+      const compMatch = line.match(
+        /(?:function\s+((?:[A-Z][a-zA-Z0-9]*[a-z][a-zA-Z0-9]*)|(?:use[A-Z][a-zA-Z0-9]+))|const\s+((?:[A-Z][a-zA-Z0-9]*[a-z][a-zA-Z0-9]*)|(?:use[A-Z][a-zA-Z0-9]+))\s*=\s*(?:React\.)?(?:memo\()?\(?)/,
+      );
       if (compMatch) {
         insideComponent = true;
         componentName = compMatch[1] || compMatch[2];
